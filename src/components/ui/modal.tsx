@@ -5,12 +5,18 @@ import { X } from "lucide-react";
 
 const EXIT_MS = 150;
 
+const sizes = {
+  md: "max-w-110",
+  lg: "max-w-2xl",
+};
+
 export function Modal({
   open,
   onClose,
   title,
   description,
   footer,
+  size = "md",
   children,
 }: {
   open: boolean;
@@ -18,6 +24,7 @@ export function Modal({
   title: string;
   description?: string;
   footer?: ReactNode;
+  size?: keyof typeof sizes;
   children?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -64,7 +71,7 @@ export function Modal({
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className={`m-auto w-[calc(100vw-2rem)] max-w-110 rounded-lg border border-edge-strong bg-raised p-0 text-ink shadow-2xl ${
+      className={`m-auto w-[calc(100vw-2rem)] ${sizes[size]} rounded-lg border border-edge-strong bg-raised p-0 text-ink shadow-2xl ${
         closing ? "modal-exit" : "modal-enter"
       }`}
     >

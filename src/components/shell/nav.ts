@@ -6,6 +6,9 @@ import {
   LayoutGrid,
   NotebookPen,
   Settings,
+  Tags,
+  Target,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,6 +25,9 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/journal", label: "Journal", icon: NotebookPen },
   { href: "/reviews", label: "Reviews", icon: ClipboardCheck },
+  { href: "/accounts", label: "Accounts", icon: Wallet },
+  { href: "/setups", label: "Setups", icon: Target },
+  { href: "/tags", label: "Tags", icon: Tags },
 ];
 
 export const SETTINGS_NAV: NavItem = {
