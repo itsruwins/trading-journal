@@ -30,6 +30,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { EmptyState } from "@/src/components/ui/empty-state";
 import { Modal } from "@/src/components/ui/modal";
+import { FilterSelect } from "@/src/components/ui/filter-select";
 import { Select } from "@/src/components/ui/select";
 import { TextField } from "@/src/components/ui/text-field";
 import { Textarea } from "@/src/components/ui/textarea";
@@ -444,11 +445,10 @@ export default function TradesPage() {
       ) : (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <select
+            <FilterSelect
               aria-label="Filter by account"
               value={accountFilter}
               onChange={(e) => setAccountFilter(e.target.value)}
-              className="h-9 appearance-none rounded-md border border-edge bg-surface px-3 pr-8 text-[13px] text-ink outline-none transition-colors duration-150 ease-out hover:border-edge-strong focus:border-accent/60"
             >
               <option value="all">All accounts</option>
               {accounts.map((a) => (
@@ -456,17 +456,16 @@ export default function TradesPage() {
                   {a.account_name}
                 </option>
               ))}
-            </select>
-            <select
+            </FilterSelect>
+            <FilterSelect
               aria-label="Filter by status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 appearance-none rounded-md border border-edge bg-surface px-3 pr-8 text-[13px] text-ink outline-none transition-colors duration-150 ease-out hover:border-edge-strong focus:border-accent/60"
             >
               <option value="all">All trades</option>
               <option value="Open">Open</option>
               <option value="Closed">Closed</option>
-            </select>
+            </FilterSelect>
             <p className="text-[13px] text-muted">
               {filtered.length} of {trades.length}
             </p>
@@ -503,7 +502,15 @@ export default function TradesPage() {
                     <TD className="text-muted">
                       {formatDate(trade.entry_time)}
                     </TD>
-                    <TD className="font-medium">{trade.pair}</TD>
+                    <TD className="font-medium">
+                      <Link
+                        href={`/trades/${trade.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded-sm text-ink hover:underline"
+                      >
+                        {trade.pair}
+                      </Link>
+                    </TD>
                     <TD>
                       <span className="inline-flex items-center gap-1.5 text-[13px] text-muted">
                         {trade.direction === "Buy" ? (

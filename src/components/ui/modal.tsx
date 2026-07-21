@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 const EXIT_MS = 150;
@@ -28,6 +28,7 @@ export function Modal({
   children?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -71,13 +72,13 @@ export function Modal({
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className={`m-auto w-[calc(100vw-2rem)] ${sizes[size]} rounded-lg border border-edge-strong bg-raised p-0 text-ink shadow-2xl ${
+      className={`m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] ${sizes[size]} overflow-y-auto overscroll-contain rounded-lg border border-edge-strong bg-raised p-0 text-ink shadow-2xl ${
         closing ? "modal-exit" : "modal-enter"
       }`}
     >
       <div className="relative px-6 pt-6">
         <h2
-          id="modal-title"
+          id={titleId}
           className="pr-8 text-[17px] font-semibold tracking-[-0.01em] text-ink"
         >
           {title}

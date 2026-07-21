@@ -24,6 +24,7 @@ export function MobileNav({
     if (open && !dialog.open) {
       setClosing(false);
       dialog.showModal();
+      document.body.style.overflow = "hidden";
       return;
     }
 
@@ -34,10 +35,17 @@ export function MobileNav({
         dialog.close();
         dialog.removeAttribute("data-closing");
         setClosing(false);
+        document.body.style.overflow = "";
       }, EXIT_MS);
       return () => clearTimeout(timer);
     }
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   return (
     <dialog

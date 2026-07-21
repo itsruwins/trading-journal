@@ -14,7 +14,11 @@ export default function Home() {
   }, [loading, session, router]);
 
   return (
-    <div className="grid min-h-dvh place-items-center">
+    <div
+      className="grid min-h-dvh place-items-center"
+      role="status"
+      aria-label="Loading"
+    >
       <Spinner className="size-5 text-faint" />
     </div>
   );
