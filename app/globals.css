@@ -1,26 +1,199 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* Surfaces — pure neutral, zero chroma; the brand lives in the primary */
+  --shell: oklch(0.075 0 0);
+  --canvas: oklch(0.09 0 0);
+  --surface: oklch(0.125 0 0);
+  --raised: oklch(0.165 0 0);
+
+  /* Text */
+  --ink: oklch(0.94 0 0);
+  --muted: oklch(0.67 0 0);
+  --faint: oklch(0.5 0 0);
+
+  /* Brand */
+  --primary: oklch(0.58 0.17 290);
+  --primary-hover: oklch(0.63 0.16 290);
+  --accent: oklch(0.76 0.1 260);
+
+  /* Semantics — green/red are reserved for P&L and status, never decoration */
+  --positive: oklch(0.72 0.15 160);
+  --negative: oklch(0.67 0.19 25);
+  --danger: oklch(0.7 0.18 25);
+
+  /* Edges & focus */
+  --edge: oklch(1 0 0 / 0.09);
+  --edge-strong: oklch(1 0 0 / 0.16);
+  --ring: oklch(0.76 0.1 260 / 0.55);
+  --ring-soft: oklch(0.76 0.1 260 / 0.22);
+  --ring-danger: oklch(0.7 0.18 25 / 0.18);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-shell: var(--shell);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-danger: var(--danger);
+  --color-edge: var(--edge);
+  --color-edge-strong: var(--edge-strong);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: oklch(0.58 0.17 290 / 0.4);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Financial figures must align vertically */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade {
+  animation: fade 0.25s ease-out both;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.15s ease-out both;
+}
+
+/* Modal: enter and exit along the same path */
+.modal-enter {
+  animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modal-exit {
+  animation: scale-out 0.15s ease-out both;
+}
+
+/* Drawer: in from the left, out to the left */
+.drawer-enter {
+  animation: slide-in-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.drawer-exit {
+  animation: slide-out-left 0.2s ease-out both;
+}
+
+dialog::backdrop {
+  background: oklch(0 0 0 / 0.6);
+  animation: fade 0.2s ease-out both;
+}
+
+dialog[data-closing]::backdrop {
+  animation: fade-out 0.15s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: fade 0.2s ease-out both;
+  }
+  .modal-enter,
+  .drawer-enter {
+    animation: fade 0.15s ease-out both;
+  }
+  .modal-exit,
+  .drawer-exit {
+    animation: fade-out 0.1s ease-out both;
+  }
 }
