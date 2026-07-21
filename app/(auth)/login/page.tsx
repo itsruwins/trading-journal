@@ -83,7 +83,7 @@ export default function LoginPage() {
         New here?{" "}
         <Link
           href="/signup"
-          className="font-medium text-accent transition-colors duration-150 ease-out hover:text-ink"
+          className="font-medium text-ink underline underline-offset-4 decoration-edge-strong transition-colors duration-150 ease-out hover:decoration-ink"
         >
           Create an account
         </Link>

@@ -12,7 +12,7 @@ export function FilterSelect({
   return (
     <div className={`relative ${className}`}>
       <select
-        className="h-9 w-full appearance-none rounded-md border border-edge bg-surface pl-3 pr-8 text-[13px] text-ink outline-none transition-colors duration-150 ease-out hover:border-edge-strong focus:border-accent/60"
+        className="h-9 w-full appearance-none rounded-md border border-edge bg-surface pl-3 pr-8 text-[13px] text-ink outline-none transition-colors duration-150 ease-out hover:border-edge-strong focus:border-ink/40"
         {...props}
       >
         {children}

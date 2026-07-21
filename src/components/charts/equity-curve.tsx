@@ -108,11 +108,11 @@ export function EquityCurve({
             />
           )}
 
-          <path d={plot.area} fill="var(--accent)" opacity="0.1" />
+          <path d={plot.area} fill="var(--chart-line)" opacity="0.1" />
           <path
             d={plot.line}
             fill="none"
-            stroke="var(--accent)"
+            stroke="var(--chart-line)"
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -123,7 +123,7 @@ export function EquityCurve({
               cx={plot.x(points.length - 1)}
               cy={plot.y(points[points.length - 1].equity)}
               r="4"
-              fill="var(--accent)"
+              fill="var(--chart-line)"
               stroke="var(--surface)"
               strokeWidth="2"
             />
@@ -143,7 +143,7 @@ export function EquityCurve({
                 cx={plot.x(hover)}
                 cy={plot.y(points[hover].equity)}
                 r="4"
-                fill="var(--accent)"
+                fill="var(--chart-line)"
                 stroke="var(--surface)"
                 strokeWidth="2"
               />

@@ -75,7 +75,7 @@ export default function SignupPage() {
         <p className="mt-8 text-[14px] text-muted">
           <Link
             href="/login"
-            className="font-medium text-accent transition-colors duration-150 ease-out hover:text-ink"
+            className="font-medium text-ink underline underline-offset-4 decoration-edge-strong transition-colors duration-150 ease-out hover:decoration-ink"
           >
             Back to sign in
           </Link>
@@ -155,7 +155,7 @@ export default function SignupPage() {
         Already have an account?{" "}
         <Link
           href="/login"
-          className="font-medium text-accent transition-colors duration-150 ease-out hover:text-ink"
+          className="font-medium text-ink underline underline-offset-4 decoration-edge-strong transition-colors duration-150 ease-out hover:decoration-ink"
         >
           Sign in
         </Link>

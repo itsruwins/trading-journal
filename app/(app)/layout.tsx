@@ -10,10 +10,27 @@ import { Sidebar } from "@/src/components/shell/sidebar";
 import { Topbar } from "@/src/components/shell/topbar";
 import { MobileNav } from "@/src/components/shell/mobile-nav";
 
+const SIDEBAR_KEY = "sidebar-collapsed";
+
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Lazy init: the sidebar isn't in the first hydrated frame (auth gate
+  // renders a spinner), so reading localStorage here is mismatch-safe.
+  const [collapsed, setCollapsed] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.localStorage.getItem(SIDEBAR_KEY) === "1",
+  );
+
+  function toggleSidebar() {
+    setCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!loading && !session) router.replace("/login");
@@ -35,7 +52,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <ProfileProvider>
       <ToastProvider>
         <div className="flex min-h-dvh">
-          <Sidebar />
+          <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
           <div className="flex min-w-0 flex-1 flex-col">
             <Topbar onMenuOpen={() => setDrawerOpen(true)} />
             <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">

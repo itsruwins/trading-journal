@@ -221,7 +221,7 @@ export default function SetupsPage() {
                     type="button"
                     disabled={quickAdding !== null}
                     onClick={() => quickAdd(s)}
-                    className="inline-flex h-8 items-center gap-1 rounded-full border border-edge px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:border-accent/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
+                    className="inline-flex h-8 items-center gap-1 rounded-full border border-edge px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:border-ink/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
                   >
                     <Plus className="size-3.5" aria-hidden="true" />
                     {quickAdding === s ? "Adding…" : s}
@@ -279,7 +279,7 @@ export default function SetupsPage() {
                             type="button"
                             onClick={() => openEdit(setup)}
                             aria-label={`Edit ${setup.name}`}
-                            className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+                            className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
                           >
                             <Pencil className="size-4" aria-hidden="true" />
                           </button>
@@ -309,7 +309,7 @@ export default function SetupsPage() {
                   type="button"
                   disabled={quickAdding !== null}
                   onClick={() => quickAdd(s)}
-                  className="inline-flex h-7 items-center gap-1 rounded-full border border-edge px-2.5 text-[12px] text-muted transition-colors duration-150 ease-out hover:border-accent/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
+                  className="inline-flex h-7 items-center gap-1 rounded-full border border-edge px-2.5 text-[12px] text-muted transition-colors duration-150 ease-out hover:border-ink/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
                 >
                   <Plus className="size-3" aria-hidden="true" />
                   {quickAdding === s ? "Adding…" : s}

@@ -35,7 +35,7 @@ const EXIT_MS = 150;
 const icons: Record<ToastVariant, ReactNode> = {
   success: <CircleCheck className="size-4 shrink-0 text-positive" />,
   error: <CircleAlert className="size-4 shrink-0 text-negative" />,
-  info: <Info className="size-4 shrink-0 text-accent" />,
+  info: <Info className="size-4 shrink-0 text-ink" />,
 };
 
 function ToastCard({

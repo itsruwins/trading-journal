@@ -38,7 +38,7 @@ export function TagChip({
       aria-pressed={selected}
       className={`${base} active:scale-[0.98] ${
         selected
-          ? "border-accent/60 bg-white/10 text-ink"
+          ? "border-ink/40 bg-selected text-ink"
           : "border-edge text-muted hover:border-edge-strong hover:text-ink"
       }`}
     >

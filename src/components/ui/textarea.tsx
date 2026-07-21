@@ -41,7 +41,7 @@ export function Textarea({
         className={`w-full resize-y rounded-md border bg-surface px-3.5 py-2.5 text-[15px] leading-relaxed text-ink outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-muted ${
           error
             ? "border-danger/60 focus:border-danger focus:shadow-[0_0_0_3px_var(--ring-danger)]"
-            : "border-edge hover:border-edge-strong focus:border-accent/60 focus:shadow-[0_0_0_3px_var(--ring-soft)]"
+            : "border-edge hover:border-edge-strong focus:border-ink/40 focus:shadow-[0_0_0_3px_var(--ring-soft)]"
         } ${className}`}
         {...props}
       />

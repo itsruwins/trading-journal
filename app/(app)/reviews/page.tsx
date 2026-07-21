@@ -193,8 +193,8 @@ export default function ReviewsPage() {
   const filterChip = (active: boolean): string =>
     `h-8 rounded-md px-3 text-[13px] font-medium transition-colors duration-150 ease-out ${
       active
-        ? "bg-white/10 text-ink"
-        : "text-muted hover:bg-white/5 hover:text-ink"
+        ? "bg-selected text-ink"
+        : "text-muted hover:bg-hover hover:text-ink"
     }`;
 
   const sections = (review: Review) => {
@@ -265,7 +265,7 @@ export default function ReviewsPage() {
                       type="button"
                       onClick={() => openEdit(review)}
                       aria-label="Edit review"
-                      className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+                      className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
                     >
                       <Pencil className="size-4" aria-hidden="true" />
                     </button>
@@ -348,7 +348,7 @@ export default function ReviewsPage() {
                   onClick={() => applyPeriodDates(p)}
                   className={`h-9 rounded-sm text-[14px] font-medium transition-colors duration-150 ease-out active:scale-[0.99] ${
                     period === p
-                      ? "bg-white/10 text-ink"
+                      ? "bg-selected text-ink"
                       : "text-muted hover:text-ink"
                   }`}
                 >

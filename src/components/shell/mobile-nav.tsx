@@ -69,7 +69,7 @@ export function MobileNav({
             type="button"
             onClick={onClose}
             aria-label="Close navigation"
-            className="flex size-9 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+            className="flex size-9 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
           >
             <X className="size-4" aria-hidden="true" />
           </button>

@@ -17,7 +17,7 @@ import {
   type CalendarCell,
   type DaySummary,
 } from "@/src/lib/calendar";
-import { formatMoney } from "@/src/lib/format";
+import { formatMoney, formatSignedMoney } from "@/src/lib/format";
 import { signedCompact } from "@/src/components/charts/chart-utils";
 import { Modal } from "@/src/components/ui/modal";
 
@@ -90,6 +90,13 @@ export function PnlCalendar({
     return currency ? formatMoney(value, currency) : signedCompact(value);
   }
 
+  /** Cell/summary figures: "$" with decimals, compact only when long. */
+  function cellMoney(value: number): string {
+    return currency
+      ? formatSignedMoney(value, currency)
+      : signedCompact(value);
+  }
+
   const monthLabel = new Intl.DateTimeFormat(undefined, {
     month: "long",
     year: "numeric",
@@ -124,7 +131,7 @@ export function PnlCalendar({
             type="button"
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+            className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
@@ -135,7 +142,7 @@ export function PnlCalendar({
             type="button"
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+            className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
@@ -146,7 +153,7 @@ export function PnlCalendar({
                 setYear(now.getFullYear());
                 setMonth(now.getMonth());
               }}
-              className="ml-1 h-8 rounded-md px-3 text-[13px] font-medium text-accent transition-colors duration-150 ease-out hover:bg-white/5"
+              className="ml-1 h-8 rounded-md px-3 text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:bg-hover"
             >
               Today
             </button>
@@ -159,7 +166,7 @@ export function PnlCalendar({
             <span
               className={`tabular font-semibold ${pnlTone(monthStats.pnl)}`}
             >
-              {signedCompact(monthStats.pnl)}
+              {cellMoney(monthStats.pnl)}
             </span>
           </span>
           <span className="text-muted">
@@ -202,27 +209,31 @@ export function PnlCalendar({
                       onClick={() => setSelectedDay(cell.key)}
                       aria-label={
                         hasTrades
-                          ? `${cell.key}: ${day.count} trades, ${signedCompact(
+                          ? `${cell.key}: ${day.count} trades, ${cellMoney(
                               day.pnl,
                             )}`
                           : undefined
                       }
                       className={`relative flex min-h-20 flex-col rounded-md p-2 text-left transition-colors duration-150 ease-out sm:min-h-27 ${
+                        cell.isToday
+                          ? "ring-1 ring-inset ring-ink/60"
+                          : ""
+                      } ${
                         !cell.inMonth
-                          ? "bg-white/[0.055]"
+                          ? "bg-wash-strong"
                           : positive
                             ? "bg-positive/12 hover:bg-positive/18"
                             : negative
                               ? "bg-negative/12 hover:bg-negative/18"
                               : hasTrades
-                                ? "bg-white/[0.04] hover:bg-white/[0.07]"
-                                : "bg-white/[0.02]"
+                                ? "bg-hover hover:bg-selected"
+                                : "bg-wash"
                       } ${hasTrades ? "active:scale-[0.99]" : "cursor-default"}`}
                     >
                       <span
-                        className={`flex size-5 items-center justify-center rounded-full text-[12px] ${
+                        className={`flex size-5 items-center justify-center text-[12px] ${
                           cell.isToday
-                            ? "bg-accent font-semibold text-canvas"
+                            ? "font-semibold text-ink"
                             : cell.inMonth
                               ? "text-ink"
                               : "text-faint"
@@ -244,7 +255,7 @@ export function PnlCalendar({
                               day.pnl,
                             )}`}
                           >
-                            {signedCompact(day.pnl)}
+                            {cellMoney(day.pnl)}
                           </span>
                         </span>
                       )}
@@ -252,7 +263,7 @@ export function PnlCalendar({
                   );
                 })}
 
-                <div className="flex min-h-20 flex-col items-center justify-center gap-0.5 rounded-md bg-white/[0.02] p-2 text-center sm:min-h-27">
+                <div className="flex min-h-20 flex-col items-center justify-center gap-0.5 rounded-md bg-wash p-2 text-center sm:min-h-27">
                   {summary.count > 0 && (
                     <>
                       <span className="text-[13px] text-muted">
@@ -264,7 +275,7 @@ export function PnlCalendar({
                           summary.pnl,
                         )}`}
                       >
-                        {signedCompact(summary.pnl)}
+                        {cellMoney(summary.pnl)}
                       </span>
                     </>
                   )}
@@ -305,7 +316,7 @@ export function PnlCalendar({
               <Link
                 key={trade.id}
                 href={`/trades/${trade.id}`}
-                className="flex items-center justify-between gap-3 rounded-md px-2 py-2 transition-colors duration-150 ease-out hover:bg-white/5"
+                className="flex items-center justify-between gap-3 rounded-md px-2 py-2 transition-colors duration-150 ease-out hover:bg-hover"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   {trade.direction === "Buy" ? (
@@ -335,7 +346,7 @@ export function PnlCalendar({
                         : "text-muted"
                   }`}
                 >
-                  {signedCompact(trade.profit_loss ?? 0)}
+                  {cellMoney(trade.profit_loss ?? 0)}
                 </span>
               </Link>
             ))}

@@ -8,10 +8,10 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         fill="none"
         aria-hidden="true"
       >
-        <rect width="28" height="28" rx="8" fill="var(--primary)" />
-        <rect x="7" y="15" width="3" height="6" rx="1.5" fill="white" />
-        <rect x="12.5" y="11" width="3" height="10" rx="1.5" fill="white" />
-        <rect x="18" y="7" width="3" height="14" rx="1.5" fill="white" />
+        <rect width="28" height="28" rx="8" fill="var(--ink)" />
+        <rect x="7" y="15" width="3" height="6" rx="1.5" fill="var(--canvas)" />
+        <rect x="12.5" y="11" width="3" height="10" rx="1.5" fill="var(--canvas)" />
+        <rect x="18" y="7" width="3" height="14" rx="1.5" fill="var(--canvas)" />
       </svg>
       {!compact && (
         <span className="text-[15px] font-semibold tracking-[-0.01em] text-ink">

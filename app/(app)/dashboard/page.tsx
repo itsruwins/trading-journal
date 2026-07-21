@@ -134,7 +134,7 @@ export default function DashboardPage() {
         action={
           <Link
             href="/trades"
-            className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-primary px-4 text-[15px] font-medium text-white transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
+            className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-primary px-4 text-[15px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
           >
             <Plus className="size-4" aria-hidden="true" />
             Log a trade
@@ -147,8 +147,8 @@ export default function DashboardPage() {
   const filterChip = (active: boolean): string =>
     `h-8 rounded-md px-3 text-[13px] font-medium transition-colors duration-150 ease-out ${
       active
-        ? "bg-white/10 text-ink"
-        : "text-muted hover:bg-white/5 hover:text-ink"
+        ? "bg-selected text-ink"
+        : "text-muted hover:bg-hover hover:text-ink"
     }`;
 
   let profitFactorValue = "—";

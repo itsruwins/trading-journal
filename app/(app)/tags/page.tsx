@@ -207,7 +207,7 @@ export default function TagsPage() {
                     type="button"
                     disabled={quickAdding !== null}
                     onClick={() => quickAdd(s)}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-full border border-edge px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:border-accent/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full border border-edge px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:border-ink/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
                   >
                     <span
                       aria-hidden="true"
@@ -258,7 +258,7 @@ export default function TagsPage() {
                           type="button"
                           onClick={() => openEdit(tag)}
                           aria-label={`Edit ${tag.name}`}
-                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
                         >
                           <Pencil className="size-4" aria-hidden="true" />
                         </button>
@@ -287,7 +287,7 @@ export default function TagsPage() {
                   type="button"
                   disabled={quickAdding !== null}
                   onClick={() => quickAdd(s)}
-                  className="inline-flex h-7 items-center gap-1.5 rounded-full border border-edge px-2.5 text-[12px] text-muted transition-colors duration-150 ease-out hover:border-accent/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-full border border-edge px-2.5 text-[12px] text-muted transition-colors duration-150 ease-out hover:border-ink/40 hover:text-ink active:scale-[0.98] disabled:opacity-50"
                 >
                   <span
                     aria-hidden="true"
@@ -352,7 +352,7 @@ export default function TagsPage() {
                 onClick={() => setColor(null)}
                 className={`flex size-8 items-center justify-center rounded-full border transition-colors duration-150 ease-out ${
                   color === null
-                    ? "border-accent/60 bg-white/10"
+                    ? "border-ink/40 bg-selected"
                     : "border-edge hover:border-edge-strong"
                 }`}
               >
@@ -368,7 +368,7 @@ export default function TagsPage() {
                   onClick={() => setColor(preset.value)}
                   className={`flex size-8 items-center justify-center rounded-full border transition-colors duration-150 ease-out ${
                     color === preset.value
-                      ? "border-accent/60 bg-white/10"
+                      ? "border-ink/40 bg-selected"
                       : "border-edge hover:border-edge-strong"
                   }`}
                 >

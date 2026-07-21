@@ -182,20 +182,20 @@ export default function TradeDetailPage() {
         {snapshots.map(({ title, image }) => {
           const url = image ? urls[image.image_url] : null;
           return (
-            <div key={title}>
+            <div key={title} className="min-w-0">
               <h3 className="text-[13px] font-medium text-muted">{title}</h3>
               {url ? (
                 <button
                   type="button"
                   onClick={() => setLightbox({ title, url })}
-                  className="mt-2 block w-full overflow-hidden rounded-lg border border-edge transition-[border-color,transform] duration-150 ease-out hover:border-edge-strong active:scale-[0.995]"
+                  className="relative mt-2 block aspect-video w-full overflow-hidden rounded-lg border border-edge transition-[border-color,transform] duration-150 ease-out hover:border-edge-strong active:scale-[0.995]"
                   aria-label={`View ${title} snapshot full size`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
                     alt={`${title} snapshot for ${trade.pair}`}
-                    className="aspect-video w-full object-cover"
+                    className="absolute inset-0 size-full object-cover"
                   />
                 </button>
               ) : (

@@ -304,7 +304,7 @@ export default function AccountsPage() {
                           type="button"
                           onClick={() => openEdit(account)}
                           aria-label={`Edit ${account.account_name}`}
-                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
                         >
                           <Pencil className="size-4" aria-hidden="true" />
                         </button>

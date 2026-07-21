@@ -169,7 +169,7 @@ function SnapshotSlot({
     slot.preview ?? (slot.removed ? null : (slot.existing?.signedUrl ?? null));
 
   return (
-    <div>
+    <div className="min-w-0">
       <span className="block text-[13px] font-medium text-muted">
         {label}
       </span>
@@ -180,14 +180,14 @@ function SnapshotSlot({
               type="button"
               disabled={disabled}
               onClick={() => inputRef.current?.click()}
-              className="block w-full overflow-hidden rounded-md border border-edge transition-[border-color] duration-150 ease-out hover:border-edge-strong"
+              className="relative block aspect-video w-full overflow-hidden rounded-md border border-edge transition-[border-color] duration-150 ease-out hover:border-edge-strong"
               aria-label={`Replace ${label} snapshot`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={shown}
                 alt={`${label} snapshot`}
-                className="aspect-video w-full object-cover"
+                className="absolute inset-0 size-full object-cover"
               />
             </button>
             <button
@@ -195,7 +195,7 @@ function SnapshotSlot({
               disabled={disabled}
               onClick={onClear}
               aria-label={`Remove ${label} snapshot`}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-canvas/80 text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-negative"
+              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-scrim text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-negative"
             >
               <X className="size-3.5" aria-hidden="true" />
             </button>
@@ -211,7 +211,7 @@ function SnapshotSlot({
               const file = e.dataTransfer.files?.[0];
               if (file) onPick(file);
             }}
-            className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-edge-strong text-[13px] text-faint transition-colors duration-150 ease-out hover:border-accent/40 hover:text-muted"
+            className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-edge-strong text-[13px] text-faint transition-colors duration-150 ease-out hover:border-ink/40 hover:text-muted"
           >
             <ImagePlus className="size-4" aria-hidden="true" />
             Add snapshot
@@ -716,7 +716,7 @@ export default function TradesPage() {
         action={
           <Link
             href="/accounts"
-            className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-primary px-4 text-[15px] font-medium text-white transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
+            className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-primary px-4 text-[15px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
           >
             Go to Accounts
           </Link>
@@ -802,7 +802,7 @@ export default function TradesPage() {
                 ) : (
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none flex aspect-video w-full flex-col items-center justify-center gap-1.5 border-b border-edge bg-white/[0.02] text-faint"
+                    className="pointer-events-none flex aspect-video w-full flex-col items-center justify-center gap-1.5 border-b border-edge bg-wash text-faint"
                   >
                     <ChartCandlestick className="size-5" />
                     <span className="text-[12px]">No snapshot</span>
@@ -834,7 +834,7 @@ export default function TradesPage() {
                       </span>
                     </span>
                     {trade.status === "Open" ? (
-                      <span className="shrink-0 rounded-full border border-edge bg-white/5 px-2 py-0.5 text-[11px] font-medium text-muted">
+                      <span className="shrink-0 rounded-full border border-edge bg-hover px-2 py-0.5 text-[11px] font-medium text-muted">
                         Open
                       </span>
                     ) : pnl != null ? (
@@ -863,7 +863,7 @@ export default function TradesPage() {
                     type="button"
                     onClick={() => openEdit(trade)}
                     aria-label={`Edit ${trade.pair} trade`}
-                    className="flex size-8 items-center justify-center rounded-md bg-canvas/80 text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-ink"
+                    className="flex size-8 items-center justify-center rounded-md bg-scrim text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-ink"
                   >
                     <Pencil className="size-4" aria-hidden="true" />
                   </button>
@@ -871,7 +871,7 @@ export default function TradesPage() {
                     type="button"
                     onClick={() => setDeleting(trade)}
                     aria-label={`Delete ${trade.pair} trade`}
-                    className="flex size-8 items-center justify-center rounded-md bg-canvas/80 text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-negative"
+                    className="flex size-8 items-center justify-center rounded-md bg-scrim text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-negative"
                   >
                     <Trash2 className="size-4" aria-hidden="true" />
                   </button>

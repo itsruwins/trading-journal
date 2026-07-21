@@ -7,6 +7,7 @@ import { LogOut, Menu, Settings } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/lib/auth";
 import { useProfile } from "@/src/lib/profile-context";
+import { ThemeToggle } from "@/src/components/ui/theme-toggle";
 import { ALL_NAV } from "./nav";
 
 function UserMenu() {
@@ -42,7 +43,7 @@ function UserMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-edge-strong bg-raised text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:border-accent/40"
+        className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-edge-strong bg-raised text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:border-ink/40"
       >
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -78,7 +79,7 @@ function UserMenu() {
               href="/settings"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex h-9 w-full items-center gap-2 rounded-sm px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+              className="flex h-9 w-full items-center gap-2 rounded-sm px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
             >
               <Settings className="size-4" aria-hidden="true" />
               Settings
@@ -87,7 +88,7 @@ function UserMenu() {
               type="button"
               role="menuitem"
               onClick={handleSignOut}
-              className="flex h-9 w-full items-center gap-2 rounded-sm px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+              className="flex h-9 w-full items-center gap-2 rounded-sm px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
             >
               <LogOut className="size-4" aria-hidden="true" />
               Sign out
@@ -113,14 +114,15 @@ export function Topbar({ onMenuOpen }: { onMenuOpen: () => void }) {
         type="button"
         onClick={onMenuOpen}
         aria-label="Open navigation"
-        className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink lg:hidden"
+        className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink lg:hidden"
       >
         <Menu className="size-5" aria-hidden="true" />
       </button>
       <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">
         {title}
       </h1>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <ThemeToggle />
         <UserMenu />
       </div>
     </header>

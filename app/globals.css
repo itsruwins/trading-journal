@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
-:root {
+:root,
+:root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Surfaces — pure neutral, zero chroma; the brand lives in the primary */
+  /* Surfaces — pure neutral, zero chroma */
   --shell: oklch(0.075 0 0);
   --canvas: oklch(0.09 0 0);
   --surface: oklch(0.125 0 0);
@@ -14,22 +15,63 @@
   --muted: oklch(0.67 0 0);
   --faint: oklch(0.58 0 0);
 
-  /* Brand */
-  --primary: oklch(0.58 0.17 290);
-  --primary-hover: oklch(0.63 0.16 290);
-  --accent: oklch(0.76 0.1 260);
+  /* Mono primary — ink-inverse action color */
+  --primary: oklch(0.94 0 0);
+  --primary-hover: oklch(0.85 0 0);
+  --primary-fg: oklch(0.09 0 0);
 
-  /* Semantics — green/red are reserved for P&L and status, never decoration */
+  /* Semantics — chroma is reserved for P&L and destructive actions */
   --positive: oklch(0.72 0.15 160);
   --negative: oklch(0.67 0.19 25);
   --danger: oklch(0.7 0.18 25);
 
-  /* Edges & focus */
+  /* Edges, states, focus */
   --edge: oklch(1 0 0 / 0.09);
   --edge-strong: oklch(1 0 0 / 0.16);
-  --ring: oklch(0.76 0.1 260 / 0.55);
-  --ring-soft: oklch(0.76 0.1 260 / 0.22);
+  --hover: oklch(1 0 0 / 0.05);
+  --selected: oklch(1 0 0 / 0.1);
+  --wash: oklch(1 0 0 / 0.025);
+  --wash-strong: oklch(1 0 0 / 0.055);
+  --scrim: oklch(0.09 0 0 / 0.8);
+  --ring: oklch(1 0 0 / 0.45);
+  --ring-soft: oklch(1 0 0 / 0.14);
   --ring-danger: oklch(0.7 0.18 25 / 0.18);
+  --chart-line: oklch(0.78 0 0);
+  --backdrop: oklch(0 0 0 / 0.6);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --shell: oklch(0.975 0 0);
+  --canvas: oklch(1 0 0);
+  --surface: oklch(0.985 0 0);
+  --raised: oklch(0.955 0 0);
+
+  --ink: oklch(0.145 0 0);
+  --muted: oklch(0.45 0 0);
+  --faint: oklch(0.52 0 0);
+
+  --primary: oklch(0.145 0 0);
+  --primary-hover: oklch(0.28 0 0);
+  --primary-fg: oklch(1 0 0);
+
+  --positive: oklch(0.55 0.14 160);
+  --negative: oklch(0.55 0.19 25);
+  --danger: oklch(0.55 0.19 25);
+
+  --edge: oklch(0 0 0 / 0.08);
+  --edge-strong: oklch(0 0 0 / 0.16);
+  --hover: oklch(0 0 0 / 0.04);
+  --selected: oklch(0 0 0 / 0.08);
+  --wash: oklch(0 0 0 / 0.02);
+  --wash-strong: oklch(0 0 0 / 0.05);
+  --scrim: oklch(1 0 0 / 0.8);
+  --ring: oklch(0 0 0 / 0.5);
+  --ring-soft: oklch(0 0 0 / 0.1);
+  --ring-danger: oklch(0.55 0.19 25 / 0.18);
+  --chart-line: oklch(0.35 0 0);
+  --backdrop: oklch(0 0 0 / 0.35);
 }
 
 @theme inline {
@@ -42,12 +84,17 @@
   --color-faint: var(--faint);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
-  --color-accent: var(--accent);
+  --color-primary-fg: var(--primary-fg);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --color-danger: var(--danger);
   --color-edge: var(--edge);
   --color-edge-strong: var(--edge-strong);
+  --color-hover: var(--hover);
+  --color-selected: var(--selected);
+  --color-wash: var(--wash);
+  --color-wash-strong: var(--wash-strong);
+  --color-scrim: var(--scrim);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-sm: 0.5rem;
@@ -63,7 +110,7 @@ body {
 }
 
 ::selection {
-  background: oklch(0.58 0.17 290 / 0.4);
+  background: oklch(0.6 0 0 / 0.35);
 }
 
 :focus-visible {
@@ -176,7 +223,7 @@ body {
 }
 
 dialog::backdrop {
-  background: oklch(0 0 0 / 0.6);
+  background: var(--backdrop);
   animation: fade 0.2s ease-out both;
 }
 

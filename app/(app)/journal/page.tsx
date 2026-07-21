@@ -233,7 +233,7 @@ export default function JournalPage() {
                         type="button"
                         onClick={() => openEdit(entry)}
                         aria-label="Edit entry"
-                        className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+                        className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
                       >
                         <Pencil className="size-4" aria-hidden="true" />
                       </button>
@@ -324,7 +324,7 @@ export default function JournalPage() {
                   }
                   className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] transition-colors duration-150 ease-out active:scale-[0.98] ${
                     mood === m.value
-                      ? "border-accent/60 bg-white/10 text-ink"
+                      ? "border-ink/40 bg-selected text-ink"
                       : "border-edge text-muted hover:border-edge-strong hover:text-ink"
                   }`}
                 >

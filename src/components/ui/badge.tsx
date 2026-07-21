@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 const variants = {
-  neutral: "border border-edge bg-white/5 text-muted",
+  neutral: "border border-edge bg-hover text-muted",
   positive: "bg-positive/10 text-positive",
   negative: "bg-negative/10 text-negative",
 };
