@@ -1,6 +1,5 @@
 import {
   ChartCandlestick,
-  ChartLine,
   ClipboardCheck,
   LayoutGrid,
   NotebookPen,
@@ -20,7 +19,6 @@ export type NavItem = {
 export const MAIN_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { href: "/trades", label: "Trades", icon: ChartCandlestick },
-  { href: "/analytics", label: "Analytics", icon: ChartLine },
   { href: "/journal", label: "Journal", icon: NotebookPen },
   { href: "/reviews", label: "Reviews", icon: ClipboardCheck },
   { href: "/accounts", label: "Accounts", icon: Wallet },

@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, Settings } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/lib/auth";
+import { useProfile } from "@/src/lib/profile-context";
 import { ALL_NAV } from "./nav";
 
 function UserMenu() {
   const { user } = useAuth();
+  const { profile, avatarUrl } = useProfile();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -27,7 +30,9 @@ function UserMenu() {
     router.replace("/login");
   }
 
-  const initial = user?.email?.charAt(0).toUpperCase() ?? "?";
+  const displayName =
+    profile?.display_name?.trim() || user?.email || "Account";
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -37,9 +42,18 @@ function UserMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex size-8 items-center justify-center rounded-full border border-edge-strong bg-raised text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:border-accent/40"
+        className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-edge-strong bg-raised text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:border-accent/40"
       >
-        {initial}
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt=""
+            className="size-full object-cover"
+          />
+        ) : (
+          initial
+        )}
       </button>
 
       {open && (
@@ -55,9 +69,20 @@ function UserMenu() {
             className="modal-enter absolute right-0 top-full z-40 mt-2 w-56 rounded-md border border-edge-strong bg-raised p-1 shadow-xl"
           >
             <div className="px-3 py-2">
-              <p className="truncate text-[13px] text-muted">{user?.email}</p>
+              <p className="truncate text-[14px] font-medium text-ink">
+                {displayName}
+              </p>
             </div>
             <div className="my-1 h-px bg-edge" aria-hidden="true" />
+            <Link
+              href="/settings"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex h-9 w-full items-center gap-2 rounded-sm px-3 text-[13px] text-muted transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
+            >
+              <Settings className="size-4" aria-hidden="true" />
+              Settings
+            </Link>
             <button
               type="button"
               role="menuitem"

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/src/components/logo";
-import { MAIN_NAV, SETTINGS_NAV, type NavItem } from "./nav";
+import { MAIN_NAV, type NavItem } from "./nav";
 
 function NavLink({
   item,
@@ -48,9 +48,6 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           <NavLink key={item.href} item={item} onNavigate={onNavigate} />
         ))}
       </nav>
-      <div className="border-t border-edge p-3">
-        <NavLink item={SETTINGS_NAV} onNavigate={onNavigate} />
-      </div>
     </>
   );
 }

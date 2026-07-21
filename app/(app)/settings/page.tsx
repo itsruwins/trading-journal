@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/lib/auth";
+import { useProfile } from "@/src/lib/profile-context";
 import { friendlyAuthError } from "@/src/lib/auth-errors";
 import {
   avatarDisplayUrl,
@@ -51,6 +52,7 @@ function SettingsSkeleton() {
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { refresh: refreshSharedProfile } = useProfile();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -140,6 +142,7 @@ export default function SettingsPage() {
         timezone,
       });
       setProfile(updated);
+      refreshSharedProfile();
       toast({ title: "Profile saved", variant: "success" });
     } catch (error) {
       const code = (error as { code?: string })?.code;
@@ -188,6 +191,7 @@ export default function SettingsPage() {
       if (previousPath && previousPath !== path) {
         await deleteAvatarFile(previousPath);
       }
+      refreshSharedProfile();
       toast({ title: "Photo updated", variant: "success" });
     } catch (error) {
       setAvatarSrc(null);
@@ -215,6 +219,7 @@ export default function SettingsPage() {
       setProfile(updated);
       setAvatarSrc(null);
       await deleteAvatarFile(previousPath);
+      refreshSharedProfile();
       toast({ title: "Photo removed", variant: "success" });
     } catch {
       toast({

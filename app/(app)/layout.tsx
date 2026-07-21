@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/auth";
+import { ProfileProvider } from "@/src/lib/profile-context";
 import { Spinner } from "@/src/components/ui/spinner";
 import { ToastProvider } from "@/src/components/ui/toast";
 import { Sidebar } from "@/src/components/shell/sidebar";
@@ -31,17 +32,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ToastProvider>
-      <div className="flex min-h-dvh">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar onMenuOpen={() => setDrawerOpen(true)} />
-          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-6xl">{children}</div>
-          </main>
+    <ProfileProvider>
+      <ToastProvider>
+        <div className="flex min-h-dvh">
+          <Sidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar onMenuOpen={() => setDrawerOpen(true)} />
+            <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
+              <div className="mx-auto w-full max-w-6xl">{children}</div>
+            </main>
+          </div>
         </div>
-      </div>
-      <MobileNav open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-    </ToastProvider>
+        <MobileNav open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      </ToastProvider>
+    </ProfileProvider>
   );
 }

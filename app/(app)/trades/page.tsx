@@ -1,11 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowDownRight, ArrowUpRight, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  ChartCandlestick,
+  ImagePlus,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/src/lib/auth";
-import { listAccounts, adjustAccountBalance, type Account } from "@/src/lib/accounts";
+import {
+  listAccounts,
+  adjustAccountBalance,
+  type Account,
+} from "@/src/lib/accounts";
 import { createSetup, listSetups, type Setup } from "@/src/lib/setups";
 import {
   listTags,
@@ -13,7 +32,17 @@ import {
   setTradeTags,
   type Tag,
 } from "@/src/lib/tags";
-import { TagChip } from "@/src/components/ui/tag-chip";
+import {
+  deleteTradeImage,
+  listImagesForTrades,
+  pickSnapshot,
+  POST_TRADE_TYPE,
+  PRE_TRADE_TYPE,
+  tradeImageUrls,
+  uploadTradeImage,
+  type TradeImage,
+  type TradeImageType,
+} from "@/src/lib/trade-images";
 import {
   computeRR,
   createTrade,
@@ -26,20 +55,20 @@ import {
   type TradeInput,
 } from "@/src/lib/trades";
 import { formatMoney } from "@/src/lib/format";
-import { Badge } from "@/src/components/ui/badge";
+import { TagChip } from "@/src/components/ui/tag-chip";
 import { Button } from "@/src/components/ui/button";
 import { EmptyState } from "@/src/components/ui/empty-state";
-import { Modal } from "@/src/components/ui/modal";
 import { FilterSelect } from "@/src/components/ui/filter-select";
+import { Modal } from "@/src/components/ui/modal";
 import { Select } from "@/src/components/ui/select";
 import { TextField } from "@/src/components/ui/text-field";
 import { Textarea } from "@/src/components/ui/textarea";
 import { useToast } from "@/src/components/ui/toast";
-import { Table, TBody, TD, TH, THead, TR } from "@/src/components/ui/table";
 
 const SESSIONS = ["London", "New York", "Tokyo", "Sydney"];
 const TIMEFRAMES = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"];
 const NEW_SETUP = "__new__";
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 type FormState = {
   account_id: string;
@@ -59,6 +88,22 @@ type FormState = {
   entry_time: string;
   exit_time: string;
   notes: string;
+};
+
+type SlotImage = TradeImage & { signedUrl?: string };
+
+type SlotState = {
+  existing: SlotImage | null;
+  file: File | null;
+  preview: string | null; // object URL for staged file
+  removed: boolean;
+};
+
+const emptySlot: SlotState = {
+  existing: null,
+  file: null,
+  preview: null,
+  removed: false,
 };
 
 function nowLocal(): string {
@@ -88,18 +133,118 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-function formatRR(rr: number | null): string {
-  return rr == null ? "—" : `${rr.toFixed(2)}R`;
+function tradeDuration(trade: Trade): string | null {
+  if (!trade.exit_time) return null;
+  const ms =
+    new Date(trade.exit_time).getTime() -
+    new Date(trade.entry_time).getTime();
+  if (ms <= 0) return null;
+  const minutes = Math.round(ms / 60000);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    const rest = minutes % 60;
+    return rest > 0 ? `${hours}h ${rest}m` : `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  const restH = hours % 24;
+  return restH > 0 ? `${days}d ${restH}h` : `${days}d`;
+}
+
+function SnapshotSlot({
+  label,
+  slot,
+  disabled,
+  onPick,
+  onClear,
+}: {
+  label: string;
+  slot: SlotState;
+  disabled: boolean;
+  onPick: (file: File) => void;
+  onClear: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const shown =
+    slot.preview ?? (slot.removed ? null : (slot.existing?.signedUrl ?? null));
+
+  return (
+    <div>
+      <span className="block text-[13px] font-medium text-muted">
+        {label}
+      </span>
+      <div className="relative mt-2">
+        {shown ? (
+          <>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => inputRef.current?.click()}
+              className="block w-full overflow-hidden rounded-md border border-edge transition-[border-color] duration-150 ease-out hover:border-edge-strong"
+              aria-label={`Replace ${label} snapshot`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={shown}
+                alt={`${label} snapshot`}
+                className="aspect-video w-full object-cover"
+              />
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onClear}
+              aria-label={`Remove ${label} snapshot`}
+              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-canvas/80 text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-negative"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files?.[0];
+              if (file) onPick(file);
+            }}
+            className="flex aspect-video w-full flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-edge-strong text-[13px] text-faint transition-colors duration-150 ease-out hover:border-accent/40 hover:text-muted"
+          >
+            <ImagePlus className="size-4" aria-hidden="true" />
+            Add snapshot
+          </button>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="sr-only"
+          aria-label={`Choose ${label} snapshot`}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onPick(file);
+            e.target.value = "";
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function TradesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
 
   const [trades, setTrades] = useState<Trade[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [setups, setSetups] = useState<Setup[]>([]);
+  const [imagesByTrade, setImagesByTrade] = useState<
+    Record<string, TradeImage[]>
+  >({});
+  const [urls, setUrls] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
 
   const [accountFilter, setAccountFilter] = useState("all");
@@ -112,21 +257,40 @@ export default function TradesPage() {
   const [saving, setSaving] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [preSlot, setPreSlot] = useState<SlotState>(emptySlot);
+  const [postSlot, setPostSlot] = useState<SlotState>(emptySlot);
 
   const [deleting, setDeleting] = useState<Trade | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([listTrades(), listAccounts(), listSetups(), listTags()])
-      .then(([tradeData, accountData, setupData, tagData]) => {
+    (async () => {
+      try {
+        const [tradeData, accountData, setupData, tagData] =
+          await Promise.all([
+            listTrades(),
+            listAccounts(),
+            listSetups(),
+            listTags(),
+          ]);
         if (cancelled) return;
         setTrades(tradeData);
         setAccounts(accountData);
         setSetups(setupData);
         setAllTags(tagData);
-      })
-      .catch(() => {
+
+        const images = await listImagesForTrades(
+          tradeData.map((t) => t.id),
+        );
+        if (cancelled) return;
+        setImagesByTrade(images);
+        const paths = Object.values(images)
+          .flat()
+          .map((i) => i.image_url);
+        const signed = await tradeImageUrls(paths);
+        if (!cancelled) setUrls(signed);
+      } catch {
         if (!cancelled) {
           toast({
             title: "Couldn't load your trades",
@@ -134,10 +298,10 @@ export default function TradesPage() {
             variant: "error",
           });
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoaded(true);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -152,6 +316,16 @@ export default function TradesPage() {
       ),
     [trades, accountFilter, statusFilter],
   );
+
+  function slotFor(trade: Trade, which: "pre" | "post"): SlotImage | null {
+    const image = pickSnapshot(imagesByTrade[trade.id] ?? [], which);
+    if (!image) return null;
+    return { ...image, signedUrl: urls[image.image_url] };
+  }
+
+  function coverFor(trade: Trade): SlotImage | null {
+    return slotFor(trade, "post") ?? slotFor(trade, "pre");
+  }
 
   function blankForm(): FormState {
     return {
@@ -176,10 +350,71 @@ export default function TradesPage() {
     };
   }
 
+  function resetSlots(trade: Trade | null) {
+    if (!trade) {
+      setPreSlot({ ...emptySlot });
+      setPostSlot({ ...emptySlot });
+      return;
+    }
+    const pre = pickSnapshot(imagesByTrade[trade.id] ?? [], "pre");
+    const post = pickSnapshot(imagesByTrade[trade.id] ?? [], "post");
+    setPreSlot({
+      existing: pre ? { ...pre, signedUrl: urls[pre.image_url] } : null,
+      file: null,
+      preview: null,
+      removed: false,
+    });
+    setPostSlot({
+      existing: post ? { ...post, signedUrl: urls[post.image_url] } : null,
+      file: null,
+      preview: null,
+      removed: false,
+    });
+  }
+
+  function stageFile(
+    which: "pre" | "post",
+    file: File,
+  ): void {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "That file isn't an image",
+        description: "Use a PNG, JPG, or WebP screenshot.",
+        variant: "error",
+      });
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast({
+        title: "Image is too large",
+        description: "Keep screenshots under 8 MB.",
+        variant: "error",
+      });
+      return;
+    }
+    const preview = URL.createObjectURL(file);
+    const update = (current: SlotState): SlotState => {
+      if (current.preview) URL.revokeObjectURL(current.preview);
+      return { ...current, file, preview, removed: false };
+    };
+    if (which === "pre") setPreSlot(update);
+    else setPostSlot(update);
+  }
+
+  function clearSlot(which: "pre" | "post") {
+    const update = (current: SlotState): SlotState => {
+      if (current.preview) URL.revokeObjectURL(current.preview);
+      return { ...current, file: null, preview: null, removed: true };
+    };
+    if (which === "pre") setPreSlot(update);
+    else setPostSlot(update);
+  }
+
   function openCreate() {
     setEditing(null);
     setForm(blankForm());
     setSelectedTagIds([]);
+    resetSlots(null);
     setErrors({});
     setFormOpen(true);
   }
@@ -213,17 +448,55 @@ export default function TradesPage() {
       .catch(() => {
         // Tag prefill is non-critical; the picker just starts empty.
       });
+    resetSlots(trade);
     setFormOpen(true);
   }
 
-  const liveRR = useMemo(() => {
-    if (!form) return null;
-    const entry = parseNumber(form.entry_price);
-    const stop = parseNumber(form.stop_loss);
-    const target =
-      parseNumber(form.exit_price) ?? parseNumber(form.take_profit);
-    return computeRR(form.direction, entry, stop, target);
-  }, [form]);
+  /** Apply staged slot changes; returns false if any image op failed. */
+  async function persistSlots(tradeId: string): Promise<boolean> {
+    if (!user) return false;
+    let ok = true;
+    const jobs: {
+      slot: SlotState;
+      type: TradeImageType;
+    }[] = [
+      { slot: preSlot, type: PRE_TRADE_TYPE },
+      { slot: postSlot, type: POST_TRADE_TYPE },
+    ];
+
+    const nextImages = [...(imagesByTrade[tradeId] ?? [])];
+    const nextUrls: Record<string, string> = {};
+
+    for (const { slot, type } of jobs) {
+      try {
+        const replacing = slot.file != null && slot.existing != null;
+        if ((slot.removed || replacing) && slot.existing) {
+          await deleteTradeImage(slot.existing);
+          const idx = nextImages.findIndex(
+            (i) => i.id === slot.existing?.id,
+          );
+          if (idx >= 0) nextImages.splice(idx, 1);
+        }
+        if (slot.file) {
+          const created = await uploadTradeImage(
+            user.id,
+            tradeId,
+            type,
+            slot.file,
+          );
+          nextImages.push(created);
+          const signed = await tradeImageUrls([created.image_url]);
+          Object.assign(nextUrls, signed);
+        }
+      } catch {
+        ok = false;
+      }
+    }
+
+    setImagesByTrade((current) => ({ ...current, [tradeId]: nextImages }));
+    setUrls((current) => ({ ...current, ...nextUrls }));
+    return ok;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -292,16 +565,20 @@ export default function TradesPage() {
 
       let balanceOk = true;
       let tagsOk = true;
+      let imagesOk = true;
+      let savedId: string;
+
       if (editing) {
         const updated = await updateTrade(editing.id, input);
+        savedId = updated.id;
+        setTrades((current) =>
+          current.map((t) => (t.id === updated.id ? updated : t)),
+        );
         try {
           await setTradeTags(updated.id, selectedTagIds);
         } catch {
           tagsOk = false;
         }
-        setTrades((current) =>
-          current.map((t) => (t.id === updated.id ? updated : t)),
-        );
         try {
           if (editing.account_id === updated.account_id) {
             await adjustAccountBalance(
@@ -324,6 +601,7 @@ export default function TradesPage() {
         toast({ title: "Trade updated", variant: "success" });
       } else {
         const created = await createTrade(user.id, input);
+        savedId = created.id;
         setTrades((current) => [created, ...current]);
         if (selectedTagIds.length > 0) {
           try {
@@ -342,6 +620,9 @@ export default function TradesPage() {
         }
         toast({ title: "Trade logged", variant: "success" });
       }
+
+      imagesOk = await persistSlots(savedId);
+
       if (!balanceOk) {
         toast({
           title: "Balance not updated",
@@ -355,6 +636,14 @@ export default function TradesPage() {
           title: "Tags not saved",
           description:
             "The trade saved, but its tags couldn't be updated. Edit the trade to retry.",
+          variant: "info",
+        });
+      }
+      if (!imagesOk) {
+        toast({
+          title: "Snapshots not saved",
+          description:
+            "The trade saved, but a snapshot couldn't be uploaded. Edit the trade to retry.",
           variant: "info",
         });
       }
@@ -406,9 +695,16 @@ export default function TradesPage() {
   if (!loaded) {
     return (
       <div
-        className="h-72 animate-pulse rounded-lg border border-edge bg-surface"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
         aria-hidden="true"
-      />
+      >
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-72 animate-pulse rounded-lg border border-edge bg-surface"
+          />
+        ))}
+      </div>
     );
   }
 
@@ -429,168 +725,168 @@ export default function TradesPage() {
     );
   }
 
-  return (
-    <>
-      {trades.length === 0 ? (
-        <EmptyState
-          title="Log your first trade"
-          description="Pair, direction, prices, and the reasoning behind the trade — everything lives here, and the dashboard builds itself from what you log."
-          action={
-            <Button onClick={openCreate}>
+  let content: ReactNode;
+  if (trades.length === 0) {
+    content = (
+      <EmptyState
+        title="Log your first trade"
+        description="Pair, direction, prices, snapshots of the chart before and after — everything lives here, and the dashboard builds itself from what you log."
+        action={
+          <Button onClick={openCreate}>
+            <Plus className="size-4" aria-hidden="true" />
+            Log trade
+          </Button>
+        }
+      />
+    );
+  } else {
+    content = (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <FilterSelect
+            aria-label="Filter by account"
+            value={accountFilter}
+            onChange={(e) => setAccountFilter(e.target.value)}
+          >
+            <option value="all">All accounts</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.account_name}
+              </option>
+            ))}
+          </FilterSelect>
+          <FilterSelect
+            aria-label="Filter by status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All trades</option>
+            <option value="Open">Open</option>
+            <option value="Closed">Closed</option>
+          </FilterSelect>
+          <p className="text-[13px] text-muted">
+            {filtered.length} of {trades.length}
+          </p>
+          <div className="ml-auto">
+            <Button size="sm" onClick={openCreate}>
               <Plus className="size-4" aria-hidden="true" />
               Log trade
             </Button>
-          }
-        />
-      ) : (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <FilterSelect
-              aria-label="Filter by account"
-              value={accountFilter}
-              onChange={(e) => setAccountFilter(e.target.value)}
-            >
-              <option value="all">All accounts</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.account_name}
-                </option>
-              ))}
-            </FilterSelect>
-            <FilterSelect
-              aria-label="Filter by status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All trades</option>
-              <option value="Open">Open</option>
-              <option value="Closed">Closed</option>
-            </FilterSelect>
-            <p className="text-[13px] text-muted">
-              {filtered.length} of {trades.length}
-            </p>
-            <div className="ml-auto">
-              <Button size="sm" onClick={openCreate}>
-                <Plus className="size-4" aria-hidden="true" />
-                Log trade
-              </Button>
-            </div>
           </div>
+        </div>
 
-          <section className="overflow-hidden rounded-lg border border-edge bg-surface">
-            <Table>
-              <THead>
-                <TR>
-                  <TH>Date</TH>
-                  <TH>Pair</TH>
-                  <TH>Direction</TH>
-                  <TH>Setup</TH>
-                  <TH numeric>Entry</TH>
-                  <TH numeric>Exit</TH>
-                  <TH numeric>RR</TH>
-                  <TH numeric>P/L</TH>
-                  <TH aria-label="Actions" />
-                </TR>
-              </THead>
-              <TBody>
-                {filtered.map((trade) => (
-                  <TR
-                    key={trade.id}
-                    interactive
-                    onClick={() => router.push(`/trades/${trade.id}`)}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((trade) => {
+            const cover = coverFor(trade);
+            const duration = tradeDuration(trade);
+            const pnl = trade.profit_loss;
+            return (
+              <article
+                key={trade.id}
+                className="group relative overflow-hidden rounded-lg border border-edge bg-surface transition-[border-color,transform] duration-150 ease-out hover:border-edge-strong"
+              >
+                <Link
+                  href={`/trades/${trade.id}`}
+                  className="absolute inset-0 z-0"
+                  aria-label={`${trade.pair} ${trade.direction} trade, ${formatDate(trade.entry_time)}`}
+                />
+
+                {cover?.signedUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cover.signedUrl}
+                    alt=""
+                    loading="lazy"
+                    className="pointer-events-none aspect-video w-full border-b border-edge object-cover"
+                  />
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none flex aspect-video w-full flex-col items-center justify-center gap-1.5 border-b border-edge bg-white/[0.02] text-faint"
                   >
-                    <TD className="text-muted">
-                      {formatDate(trade.entry_time)}
-                    </TD>
-                    <TD className="font-medium">
-                      <Link
-                        href={`/trades/${trade.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded-sm text-ink hover:underline"
-                      >
+                    <ChartCandlestick className="size-5" />
+                    <span className="text-[12px]">No snapshot</span>
+                  </div>
+                )}
+
+                <div className="pointer-events-none p-4">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">
                         {trade.pair}
-                      </Link>
-                    </TD>
-                    <TD>
-                      <span className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+                      </span>
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold uppercase tracking-[0.02em] ${
+                          trade.direction === "Buy"
+                            ? "text-positive"
+                            : "text-negative"
+                        }`}
+                      >
                         {trade.direction === "Buy" ? (
-                          <ArrowUpRight
-                            className="size-3.5 text-positive"
-                            aria-hidden="true"
-                          />
+                          <ArrowUpRight className="size-3" aria-hidden="true" />
                         ) : (
                           <ArrowDownRight
-                            className="size-3.5 text-negative"
+                            className="size-3"
                             aria-hidden="true"
                           />
                         )}
-                        {trade.direction === "Buy" ? "Buy" : "Sell"}
+                        {trade.direction === "Buy" ? "Long" : "Short"}
                       </span>
-                    </TD>
-                    <TD className="text-muted">
-                      {trade.setups?.name ?? "—"}
-                    </TD>
-                    <TD numeric>{trade.entry_price}</TD>
-                    <TD numeric className="text-muted">
-                      {trade.exit_price ?? "—"}
-                    </TD>
-                    <TD numeric className="text-muted">
-                      {formatRR(trade.rr)}
-                    </TD>
-                    <TD numeric>
-                      {trade.status === "Open" ? (
-                        <Badge>Open</Badge>
-                      ) : trade.profit_loss != null ? (
-                        <span
-                          className={`font-medium ${
-                            trade.profit_loss >= 0
-                              ? "text-positive"
-                              : "text-negative"
-                          }`}
-                        >
-                          {trade.profit_loss >= 0 ? "+" : ""}
-                          {formatMoney(
-                            trade.profit_loss,
-                            trade.accounts?.currency ?? "USD",
-                          )}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </TD>
-                    <TD className="w-0">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEdit(trade);
-                          }}
-                          aria-label={`Edit ${trade.pair} trade`}
-                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-white/5 hover:text-ink"
-                        >
-                          <Pencil className="size-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleting(trade);
-                          }}
-                          aria-label={`Delete ${trade.pair} trade`}
-                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-negative/10 hover:text-negative"
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
-          </section>
+                    </span>
+                    {trade.status === "Open" ? (
+                      <span className="shrink-0 rounded-full border border-edge bg-white/5 px-2 py-0.5 text-[11px] font-medium text-muted">
+                        Open
+                      </span>
+                    ) : pnl != null ? (
+                      <span
+                        className={`tabular shrink-0 text-[16px] font-semibold ${
+                          pnl >= 0 ? "text-positive" : "text-negative"
+                        }`}
+                      >
+                        {pnl >= 0 ? "+" : ""}
+                        {formatMoney(pnl, trade.accounts?.currency ?? "USD")}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1.5 truncate text-[12px] text-muted">
+                    {formatDate(trade.entry_time)}
+                    {trade.setups?.name && <> · {trade.setups.name}</>}
+                    {trade.rr != null && (
+                      <> · {trade.rr.toFixed(2)}R</>
+                    )}
+                    {duration && <> · {duration}</>}
+                  </p>
+                </div>
+
+                <div className="absolute right-2 top-2 z-10 flex items-center gap-1 opacity-0 transition-opacity duration-150 ease-out focus-within:opacity-100 group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(trade)}
+                    aria-label={`Edit ${trade.pair} trade`}
+                    className="flex size-8 items-center justify-center rounded-md bg-canvas/80 text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-ink"
+                  >
+                    <Pencil className="size-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleting(trade)}
+                    aria-label={`Delete ${trade.pair} trade`}
+                    className="flex size-8 items-center justify-center rounded-md bg-canvas/80 text-faint backdrop-blur-sm transition-colors duration-150 ease-out hover:text-negative"
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {content}
 
       <Modal
         open={formOpen}
@@ -743,22 +1039,6 @@ export default function TradesPage() {
               />
             </div>
 
-            {liveRR != null && (
-              <p className="tabular animate-fade rounded-md bg-white/5 px-3 py-2 text-[13px] text-muted">
-                {form.exit_price
-                  ? "Realized"
-                  : "Planned"}{" "}
-                R multiple:{" "}
-                <span
-                  className={`font-medium ${
-                    liveRR >= 0 ? "text-positive" : "text-negative"
-                  }`}
-                >
-                  {liveRR.toFixed(2)}R
-                </span>
-              </p>
-            )}
-
             <div className="grid gap-4 sm:grid-cols-3">
               <TextField
                 label="Risk %"
@@ -826,6 +1106,23 @@ export default function TradesPage() {
                   }}
                 />
               )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SnapshotSlot
+                label="Pre-trade snapshot"
+                slot={preSlot}
+                disabled={saving}
+                onPick={(file) => stageFile("pre", file)}
+                onClear={() => clearSlot("pre")}
+              />
+              <SnapshotSlot
+                label="Post-trade snapshot"
+                slot={postSlot}
+                disabled={saving}
+                onPick={(file) => stageFile("post", file)}
+                onClear={() => clearSlot("post")}
+              />
             </div>
 
             {allTags.length > 0 && (
