@@ -3,6 +3,8 @@ export function formatMoney(value: number, currency: string): string {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
+      // "$" not "US$" — stay consistent across device locales.
+      currencyDisplay: "narrowSymbol",
     }).format(value);
   } catch {
     return `${currency} ${value.toFixed(2)}`;
@@ -24,6 +26,7 @@ export function formatSignedMoney(
     const formatted = new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
+      currencyDisplay: "narrowSymbol",
       ...(abs >= compactFrom
         ? { notation: "compact" as const, maximumFractionDigits: 1 }
         : { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
