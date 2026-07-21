@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/src/lib/auth";
 import {
   createAccount,
@@ -10,7 +10,7 @@ import {
   updateAccount,
   type Account,
 } from "@/src/lib/accounts";
-import { formatMoney } from "@/src/lib/format";
+import { formatMoney, formatSignedMoney } from "@/src/lib/format";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { EmptyState } from "@/src/components/ui/empty-state";
@@ -18,14 +18,6 @@ import { Modal } from "@/src/components/ui/modal";
 import { Select } from "@/src/components/ui/select";
 import { TextField } from "@/src/components/ui/text-field";
 import { useToast } from "@/src/components/ui/toast";
-import {
-  Table,
-  TBody,
-  TD,
-  TH,
-  THead,
-  TR,
-} from "@/src/components/ui/table";
 
 const ACCOUNT_TYPES = [
   { value: "live", label: "Live" },
@@ -68,6 +60,20 @@ function typeLabel(value: string | null): string {
   return (
     ACCOUNT_TYPES.find((t) => t.value === value)?.label ?? value ?? "—"
   );
+}
+
+function accountReturn(account: Account): {
+  pnl: number;
+  pct: number | null;
+} {
+  const pnl =
+    Math.round((account.current_balance - account.initial_balance) * 100) /
+    100;
+  const pct =
+    account.initial_balance !== 0
+      ? Math.round((pnl / account.initial_balance) * 10000) / 100
+      : null;
+  return { pnl, pct };
 }
 
 export default function AccountsPage() {
@@ -219,9 +225,16 @@ export default function AccountsPage() {
   if (!loaded) {
     return (
       <div
-        className="h-64 animate-pulse rounded-lg border border-edge bg-surface"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
         aria-hidden="true"
-      />
+      >
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-48 animate-pulse rounded-lg border border-edge bg-surface"
+          />
+        ))}
+      </div>
     );
   }
 
@@ -251,78 +264,107 @@ export default function AccountsPage() {
             </Button>
           </div>
 
-          <section className="overflow-hidden rounded-lg border border-edge bg-surface">
-            <Table>
-              <THead>
-                <TR>
-                  <TH>Account</TH>
-                  <TH>Type</TH>
-                  <TH>Status</TH>
-                  <TH numeric>Starting balance</TH>
-                  <TH numeric>Current balance</TH>
-                  <TH aria-label="Actions" />
-                </TR>
-              </THead>
-              <TBody>
-                {accounts.map((account) => (
-                  <TR key={account.id}>
-                    <TD>
-                      <div className="leading-tight">
-                        <p className="font-medium">{account.account_name}</p>
-                        {account.broker && (
-                          <p className="mt-0.5 text-[13px] text-muted">
-                            {account.broker}
-                          </p>
-                        )}
-                      </div>
-                    </TD>
-                    <TD>
-                      <Badge>{typeLabel(account.account_type)}</Badge>
-                    </TD>
-                    <TD>
-                      {account.is_active ? (
-                        <Badge variant="positive">
-                          <span
-                            className="size-1.5 rounded-full bg-positive"
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {accounts.map((account) => {
+              const { pnl, pct } = accountReturn(account);
+              const up = pnl > 0;
+              const down = pnl < 0;
+              const tone = up
+                ? "text-positive"
+                : down
+                  ? "text-negative"
+                  : "text-muted";
+              return (
+                <article
+                  key={account.id}
+                  className={`group relative flex flex-col rounded-lg border border-edge bg-surface p-5 transition-[border-color] duration-150 ease-out hover:border-edge-strong ${
+                    account.is_active ? "" : "opacity-60"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">
+                        {account.account_name}
+                      </h2>
+                      <p className="mt-0.5 truncate text-[13px] text-muted">
+                        {account.broker || typeLabel(account.account_type)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-150 ease-out focus-within:opacity-100 group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(account)}
+                        aria-label={`Edit ${account.account_name}`}
+                        className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
+                      >
+                        <Pencil className="size-4" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleting(account)}
+                        aria-label={`Delete ${account.account_name}`}
+                        className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-negative/10 hover:text-negative"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    <p className="tabular text-2xl font-semibold tracking-[-0.01em] text-ink">
+                      {formatMoney(
+                        account.current_balance,
+                        account.currency,
+                      )}
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-[13px]">
+                      <span
+                        className={`tabular inline-flex items-center gap-0.5 font-medium ${tone}`}
+                      >
+                        {up && (
+                          <ArrowUpRight
+                            className="size-3.5"
                             aria-hidden="true"
                           />
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge>Inactive</Badge>
+                        )}
+                        {down && (
+                          <ArrowDownRight
+                            className="size-3.5"
+                            aria-hidden="true"
+                          />
+                        )}
+                        {formatSignedMoney(pnl, account.currency)}
+                      </span>
+                      {pct !== null && (
+                        <span className={`tabular ${tone}`}>
+                          ({pct > 0 ? "+" : pct < 0 ? "−" : ""}
+                          {Math.abs(pct).toFixed(2)}%)
+                        </span>
                       )}
-                    </TD>
-                    <TD numeric className="text-muted">
-                      {formatMoney(account.initial_balance, account.currency)}
-                    </TD>
-                    <TD numeric className="font-medium">
-                      {formatMoney(account.current_balance, account.currency)}
-                    </TD>
-                    <TD className="w-0">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(account)}
-                          aria-label={`Edit ${account.account_name}`}
-                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
-                        >
-                          <Pencil className="size-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleting(account)}
-                          aria-label={`Delete ${account.account_name}`}
-                          className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-negative/10 hover:text-negative"
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
-          </section>
+                    </p>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-edge pt-4 text-[12px] text-muted">
+                    <Badge>{typeLabel(account.account_type)}</Badge>
+                    <span className="text-faint">{account.currency}</span>
+                    <span className="text-faint">·</span>
+                    <span>
+                      Start{" "}
+                      <span className="tabular text-muted">
+                        {formatMoney(
+                          account.initial_balance,
+                          account.currency,
+                        )}
+                      </span>
+                    </span>
+                    {!account.is_active && (
+                      <span className="ml-auto text-faint">Inactive</span>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
 

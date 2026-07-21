@@ -452,6 +452,16 @@ export default function TradesPage() {
     setFormOpen(true);
   }
 
+  // Live R multiple: realized once an exit exists, otherwise planned to TP.
+  const liveRR = useMemo(() => {
+    if (!form) return null;
+    const entry = parseNumber(form.entry_price);
+    const stop = parseNumber(form.stop_loss);
+    const target =
+      parseNumber(form.exit_price) ?? parseNumber(form.take_profit);
+    return computeRR(form.direction, entry, stop, target);
+  }, [form]);
+
   /** Apply staged slot changes; returns false if any image op failed. */
   async function persistSlots(tradeId: string): Promise<boolean> {
     if (!user) return false;
@@ -1013,6 +1023,40 @@ export default function TradesPage() {
                 label="Exit price"
                 inputMode="decimal"
                 hint="Leave empty while the trade is open."
+                labelAccessory={
+                  form.take_profit.trim() || form.stop_loss.trim() ? (
+                    <span className="flex items-center gap-1">
+                      {form.take_profit.trim() && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              exit_price: form.take_profit,
+                            })
+                          }
+                          className="rounded border border-edge px-1.5 py-0.5 text-[11px] font-medium text-muted transition-colors duration-150 ease-out hover:border-edge-strong hover:text-positive active:scale-[0.97]"
+                        >
+                          Use TP
+                        </button>
+                      )}
+                      {form.stop_loss.trim() && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              exit_price: form.stop_loss,
+                            })
+                          }
+                          className="rounded border border-edge px-1.5 py-0.5 text-[11px] font-medium text-muted transition-colors duration-150 ease-out hover:border-edge-strong hover:text-negative active:scale-[0.97]"
+                        >
+                          Use SL
+                        </button>
+                      )}
+                    </span>
+                  ) : undefined
+                }
                 value={form.exit_price}
                 onChange={(e) =>
                   setForm({ ...form, exit_price: e.target.value })
@@ -1038,6 +1082,21 @@ export default function TradesPage() {
                 }}
               />
             </div>
+
+            {liveRR != null && (
+              <div className="rounded-md bg-wash px-3 py-2 text-[13px]">
+                <span className="text-muted">
+                  {form.exit_price.trim() ? "Realized" : "Planned"} R multiple:{" "}
+                  <span
+                    className={`tabular font-semibold ${
+                      liveRR >= 0 ? "text-positive" : "text-negative"
+                    }`}
+                  >
+                    {liveRR.toFixed(2)}R
+                  </span>
+                </span>
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-3">
               <TextField

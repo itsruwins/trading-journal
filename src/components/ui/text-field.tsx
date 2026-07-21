@@ -1,17 +1,19 @@
 "use client";
 
-import { useId, useState, type InputHTMLAttributes } from "react";
+import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 
 type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
   hint?: string;
+  labelAccessory?: ReactNode;
 };
 
 export function TextField({
   label,
   error,
   hint,
+  labelAccessory,
   type = "text",
   className = "",
   id: idProp,
@@ -29,12 +31,15 @@ export function TextField({
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={id}
-        className="block text-[13px] font-medium text-muted"
-      >
-        {label}
-      </label>
+      <div className="flex min-h-5 items-center justify-between gap-2">
+        <label
+          htmlFor={id}
+          className="block text-[13px] font-medium text-muted"
+        >
+          {label}
+        </label>
+        {labelAccessory}
+      </div>
       <div className="relative">
         <input
           id={id}
