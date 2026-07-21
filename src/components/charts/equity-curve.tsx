@@ -10,10 +10,15 @@ import {
   useMeasure,
 } from "./chart-utils";
 
-const HEIGHT = 260;
 const PAD = { top: 16, right: 16, bottom: 26, left: 48 };
 
-export function EquityCurve({ points }: { points: EquityPoint[] }) {
+export function EquityCurve({
+  points,
+  height: HEIGHT = 260,
+}: {
+  points: EquityPoint[];
+  height?: number;
+}) {
   const [ref, width] = useMeasure();
   const [hover, setHover] = useState<number | null>(null);
 
@@ -43,7 +48,7 @@ export function EquityCurve({ points }: { points: EquityPoint[] }) {
     )}L${x(0)},${y(Math.max(lo, 0))}Z`;
 
     return { x, y, line, area, ticks, zero: y(0) };
-  }, [width, points]);
+  }, [width, points, HEIGHT]);
 
   function handleMove(event: PointerEvent<SVGSVGElement>) {
     if (!plot || points.length === 0) return;

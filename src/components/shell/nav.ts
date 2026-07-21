@@ -1,5 +1,4 @@
 import {
-  CalendarDays,
   ChartCandlestick,
   ChartLine,
   ClipboardCheck,
@@ -22,7 +21,6 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { href: "/trades", label: "Trades", icon: ChartCandlestick },
   { href: "/analytics", label: "Analytics", icon: ChartLine },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/journal", label: "Journal", icon: NotebookPen },
   { href: "/reviews", label: "Reviews", icon: ClipboardCheck },
   { href: "/accounts", label: "Accounts", icon: Wallet },

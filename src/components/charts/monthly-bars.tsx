@@ -10,11 +10,16 @@ import {
   useMeasure,
 } from "./chart-utils";
 
-const HEIGHT = 220;
 const PAD = { top: 12, right: 8, bottom: 24, left: 44 };
 const MAX_BAR = 24;
 
-export function MonthlyBars({ bars }: { bars: MonthBar[] }) {
+export function MonthlyBars({
+  bars,
+  height: HEIGHT = 220,
+}: {
+  bars: MonthBar[];
+  height?: number;
+}) {
   const [ref, width] = useMeasure();
   const [hover, setHover] = useState<number | null>(null);
 
@@ -36,7 +41,7 @@ export function MonthlyBars({ bars }: { bars: MonthBar[] }) {
     const y = (v: number) => PAD.top + innerH - ((v - lo) / span) * innerH;
 
     return { x, y, band, barW, ticks, zero: y(0) };
-  }, [width, bars]);
+  }, [width, bars, HEIGHT]);
 
   return (
     <div ref={ref} className="relative">

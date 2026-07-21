@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { useAuth } from "@/src/lib/auth";
+import { getProfile } from "@/src/lib/profile";
 import { listAccounts, type Account } from "@/src/lib/accounts";
 import { listTrades, type Trade } from "@/src/lib/trades";
 import {
@@ -12,18 +14,16 @@ import {
   filterTrades,
   monthlyPnl,
   RANGES,
-  setupPnl,
   type RangeKey,
 } from "@/src/lib/stats";
 import { formatMoney } from "@/src/lib/format";
 import { signedCompact } from "@/src/components/charts/chart-utils";
 import { EquityCurve } from "@/src/components/charts/equity-curve";
 import { MonthlyBars } from "@/src/components/charts/monthly-bars";
-import { SetupBars } from "@/src/components/charts/setup-bars";
-import { WinLossBar } from "@/src/components/charts/win-loss-bar";
+import { PnlCalendar } from "@/src/components/dashboard/pnl-calendar";
 import { Card } from "@/src/components/ui/card";
-import { FilterSelect } from "@/src/components/ui/filter-select";
 import { EmptyState } from "@/src/components/ui/empty-state";
+import { FilterSelect } from "@/src/components/ui/filter-select";
 import { useToast } from "@/src/components/ui/toast";
 
 function StatTile({
@@ -61,20 +61,26 @@ function money(value: number, currency: string | null): string {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [timeZone, setTimeZone] = useState(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
   const [loaded, setLoaded] = useState(false);
   const [accountFilter, setAccountFilter] = useState("all");
   const [range, setRange] = useState<RangeKey>("all");
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
-    Promise.all([listTrades(), listAccounts()])
-      .then(([tradeData, accountData]) => {
+    Promise.all([listTrades(), listAccounts(), getProfile(user.id)])
+      .then(([tradeData, accountData, profile]) => {
         if (cancelled) return;
         setTrades(tradeData);
         setAccounts(accountData);
+        if (profile?.timezone) setTimeZone(profile.timezone);
       })
       .catch(() => {
         if (!cancelled) {
@@ -91,23 +97,31 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [toast]);
+  }, [user, toast]);
 
   const filtered = useMemo(
     () => filterTrades(trades, accountFilter, range),
     [trades, accountFilter, range],
   );
+  // The calendar scopes itself by month, so only the account filter applies.
+  const accountScoped = useMemo(
+    () => filterTrades(trades, accountFilter, "all"),
+    [trades, accountFilter],
+  );
   const stats = useMemo(() => computeStats(filtered), [filtered]);
   const equity = useMemo(() => equityPoints(filtered), [filtered]);
   const months = useMemo(() => monthlyPnl(filtered), [filtered]);
-  const setups = useMemo(() => setupPnl(filtered), [filtered]);
   const currency = useMemo(() => commonCurrency(filtered), [filtered]);
+  const calendarCurrency = useMemo(
+    () => commonCurrency(accountScoped),
+    [accountScoped],
+  );
 
   if (!loaded) {
     return (
       <div className="space-y-6" aria-hidden="true">
-        <div className="h-28 animate-pulse rounded-lg border border-edge bg-surface" />
-        <div className="h-72 animate-pulse rounded-lg border border-edge bg-surface" />
+        <div className="h-24 animate-pulse rounded-lg border border-edge bg-surface" />
+        <div className="h-96 animate-pulse rounded-lg border border-edge bg-surface" />
       </div>
     );
   }
@@ -116,7 +130,7 @@ export default function DashboardPage() {
     return (
       <EmptyState
         title="No trades to analyze yet"
-        description="Log your first trade and this dashboard fills in — P&L, win rate, profit factor, your equity curve, and performance by setup and session."
+        description="Log your first trade and this dashboard fills in — P&L, win rate, profit factor, your equity curve, and a calendar of your trading days."
         action={
           <Link
             href="/trades"
@@ -179,21 +193,23 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="rounded-lg border border-edge bg-surface p-6">
-        <p className="text-[13px] font-medium text-faint">Total profit</p>
-        <p
-          className={`mt-2 text-5xl font-semibold tracking-[-0.02em] ${
-            stats.totalProfit > 0
-              ? "text-positive"
-              : stats.totalProfit < 0
-                ? "text-negative"
-                : "text-ink"
-          }`}
-        >
-          {stats.totalProfit > 0 ? "+" : ""}
-          {money(stats.totalProfit, currency)}
-        </p>
-        <p className="mt-2 text-[13px] text-muted">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-edge bg-surface px-5 py-4">
+        <div className="flex items-baseline gap-3">
+          <p className="text-[13px] font-medium text-faint">Total profit</p>
+          <p
+            className={`text-[28px] font-semibold tracking-[-0.02em] ${
+              stats.totalProfit > 0
+                ? "text-positive"
+                : stats.totalProfit < 0
+                  ? "text-negative"
+                  : "text-ink"
+            }`}
+          >
+            {stats.totalProfit > 0 ? "+" : ""}
+            {money(stats.totalProfit, currency)}
+          </p>
+        </div>
+        <p className="text-[13px] text-muted">
           {stats.closedCount} closed{" "}
           {stats.closedCount === 1 ? "trade" : "trades"}
           {currency === null && stats.closedCount > 0 && (
@@ -229,9 +245,7 @@ export default function DashboardPage() {
           label="Best setup"
           value={stats.bestSetup?.name ?? "—"}
           detail={
-            stats.bestSetup
-              ? money(stats.bestSetup.pnl, currency)
-              : undefined
+            stats.bestSetup ? money(stats.bestSetup.pnl, currency) : undefined
           }
         />
         <StatTile
@@ -245,29 +259,21 @@ export default function DashboardPage() {
         />
       </div>
 
+      <PnlCalendar
+        trades={accountScoped}
+        timeZone={timeZone}
+        currency={calendarCurrency}
+      />
+
       {equity.length > 0 ? (
-        <>
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card title="Equity curve">
-            <EquityCurve points={equity} />
+            <EquityCurve points={equity} height={180} />
           </Card>
-
-          <div className="grid gap-6 lg:grid-cols-5">
-            <Card title="Monthly performance" className="lg:col-span-3">
-              <MonthlyBars bars={months} />
-            </Card>
-            <Card title="Win / loss" className="lg:col-span-2">
-              <WinLossBar
-                wins={stats.wins}
-                losses={stats.losses}
-                breakeven={stats.breakeven}
-              />
-            </Card>
-          </div>
-
-          <Card title="Setup performance">
-            <SetupBars rows={setups} />
+          <Card title="Monthly performance">
+            <MonthlyBars bars={months} height={180} />
           </Card>
-        </>
+        </div>
       ) : (
         <Card>
           <p className="py-8 text-center text-[14px] text-muted">
