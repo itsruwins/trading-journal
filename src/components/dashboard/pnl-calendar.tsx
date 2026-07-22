@@ -179,8 +179,8 @@ export function PnlCalendar({
       </header>
 
       <div key={`${year}-${month}`} className="animate-fade">
-        <div className="mb-1.5 grid grid-cols-6 gap-1.5">
-          {[...WEEKDAYS, "Summary"].map((label) => (
+        <div className="mb-1.5 grid grid-cols-5 gap-1.5 sm:grid-cols-6">
+          {WEEKDAYS.map((label) => (
             <div
               key={label}
               className="py-1 text-center text-[11px] font-medium text-faint"
@@ -188,13 +188,16 @@ export function PnlCalendar({
               {label}
             </div>
           ))}
+          <div className="hidden py-1 text-center text-[11px] font-medium text-faint sm:block">
+            Summary
+          </div>
         </div>
 
         <div className="space-y-1.5">
           {weeks.map((week, w) => {
             const summary = weekSummary(week);
             return (
-              <div key={w} className="grid grid-cols-6 gap-1.5">
+              <div key={w} className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
                 {week.slice(0, 5).map((cell) => {
                   const day = cell.inMonth ? byDay.get(cell.key) : undefined;
                   const hasTrades = day != null;
@@ -214,7 +217,7 @@ export function PnlCalendar({
                             )}`
                           : undefined
                       }
-                      className={`relative flex min-h-20 flex-col rounded-md p-2 text-left transition-colors duration-150 ease-out sm:min-h-27 ${
+                      className={`relative flex aspect-square flex-col rounded-md p-2 text-left transition-colors duration-150 ease-out sm:aspect-auto sm:min-h-27 ${
                         cell.isToday
                           ? "ring-1 ring-inset ring-ink/60"
                           : ""
@@ -242,7 +245,7 @@ export function PnlCalendar({
                         {cell.dayOfMonth}
                       </span>
                       {hasTrades && (
-                        <span className="flex flex-1 flex-col items-center justify-center gap-0.5 pb-1 text-center">
+                        <span className="hidden flex-1 flex-col items-center justify-center gap-0.5 pb-1 text-center sm:flex">
                           <span
                             className={`tabular text-[13px] font-semibold ${pnlTone(
                               day.pnl,
@@ -263,7 +266,7 @@ export function PnlCalendar({
                   );
                 })}
 
-                <div className="flex min-h-20 flex-col items-center justify-center gap-0.5 rounded-md bg-wash p-2 text-center sm:min-h-27">
+                <div className="hidden min-h-20 flex-col items-center justify-center gap-0.5 rounded-md bg-wash p-2 text-center sm:flex sm:min-h-27">
                   {summary.count > 0 && (
                     <>
                       <span className="text-[13px] text-muted">
