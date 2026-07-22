@@ -17,6 +17,12 @@ import {
   type TradeImage,
 } from "@/src/lib/trade-images";
 import { listTagsForTrade, type Tag } from "@/src/lib/tags";
+import {
+  CHECKLIST_SECTIONS,
+  checklistScore,
+  parseTradeNotes,
+} from "@/src/lib/checklist";
+import { Check, X } from "lucide-react";
 import { TagChip } from "@/src/components/ui/tag-chip";
 import { formatMoney } from "@/src/lib/format";
 import { Badge } from "@/src/components/ui/badge";
@@ -238,13 +244,75 @@ export default function TradeDetailPage() {
         )}
       </Card>
 
-      {trade.notes && (
-        <Card title="Notes">
-          <p className="max-w-prose whitespace-pre-wrap text-[14px] leading-relaxed text-ink">
-            {trade.notes}
-          </p>
-        </Card>
-      )}
+      {(() => {
+        const { prose, checklist } = parseTradeNotes(trade.notes);
+        const score = checklistScore(checklist);
+        return (
+          <>
+            {checklist.length > 0 && (
+              <Card
+                title="Setup checklist"
+                action={
+                  <span className="tabular text-[13px] text-muted">
+                    Followed {score.done}/{score.total}
+                  </span>
+                }
+              >
+                <div className="space-y-4">
+                  {CHECKLIST_SECTIONS.map((section) => {
+                    const items = checklist.filter(
+                      (i) => i.section === section.key,
+                    );
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={section.key}>
+                        <p className="text-[12px] font-medium text-faint">
+                          {section.heading}
+                        </p>
+                        <ul className="mt-1.5 space-y-1">
+                          {items.map((item, i) => (
+                            <li
+                              key={i}
+                              className="flex items-start gap-2.5 text-[14px]"
+                            >
+                              {item.checked ? (
+                                <Check
+                                  className="mt-0.5 size-4 shrink-0 text-positive"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <X
+                                  className="mt-0.5 size-4 shrink-0 text-faint"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span
+                                className={
+                                  item.checked ? "text-ink" : "text-faint"
+                                }
+                              >
+                                {item.text}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            {prose && (
+              <Card title="Notes">
+                <p className="max-w-prose whitespace-pre-wrap text-[14px] leading-relaxed text-ink">
+                  {prose}
+                </p>
+              </Card>
+            )}
+          </>
+        );
+      })()}
 
       <Modal
         open={lightbox !== null}

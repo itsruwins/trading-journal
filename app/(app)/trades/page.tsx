@@ -27,6 +27,15 @@ import {
 } from "@/src/lib/accounts";
 import { createSetup, listSetups, type Setup } from "@/src/lib/setups";
 import {
+  CHECKLIST_SECTIONS,
+  checklistScore,
+  parseSetupChecklist,
+  parseTradeNotes,
+  sectionsToItems,
+  serializeTradeNotes,
+  type ChecklistItem,
+} from "@/src/lib/checklist";
+import {
   listTags,
   listTradeTagIds,
   setTradeTags,
@@ -257,6 +266,7 @@ export default function TradesPage() {
   const [saving, setSaving] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [preSlot, setPreSlot] = useState<SlotState>(emptySlot);
   const [postSlot, setPostSlot] = useState<SlotState>(emptySlot);
 
@@ -410,10 +420,23 @@ export default function TradesPage() {
     else setPostSlot(update);
   }
 
+  /** Build an unchecked checklist from a setup's template. */
+  function setupChecklist(setupId: string): ChecklistItem[] {
+    const setup = setups.find((s) => s.id === setupId);
+    if (!setup) return [];
+    return sectionsToItems(parseSetupChecklist(setup.description));
+  }
+
+  function handleSetupChange(value: string) {
+    setForm((f) => (f ? { ...f, setup_id: value } : f));
+    setChecklist(value && value !== NEW_SETUP ? setupChecklist(value) : []);
+  }
+
   function openCreate() {
     setEditing(null);
     setForm(blankForm());
     setSelectedTagIds([]);
+    setChecklist([]);
     resetSlots(null);
     setErrors({});
     setFormOpen(true);
@@ -421,6 +444,7 @@ export default function TradesPage() {
 
   function openEdit(trade: Trade) {
     setEditing(trade);
+    const { prose, checklist: savedChecklist } = parseTradeNotes(trade.notes);
     setForm({
       account_id: trade.account_id,
       pair: trade.pair,
@@ -439,8 +463,12 @@ export default function TradesPage() {
       new_setup_name: "",
       entry_time: toDatetimeLocal(trade.entry_time),
       exit_time: toDatetimeLocal(trade.exit_time),
-      notes: trade.notes ?? "",
+      notes: prose,
     });
+    // Prefer the checklist saved on the trade; fall back to the setup template.
+    if (savedChecklist.length > 0) setChecklist(savedChecklist);
+    else if (trade.setup_id) setChecklist(setupChecklist(trade.setup_id));
+    else setChecklist([]);
     setErrors({});
     setSelectedTagIds([]);
     listTradeTagIds(trade.id)
@@ -450,6 +478,14 @@ export default function TradesPage() {
       });
     resetSlots(trade);
     setFormOpen(true);
+  }
+
+  function toggleChecklistItem(index: number) {
+    setChecklist((current) =>
+      current.map((item, i) =>
+        i === index ? { ...item, checked: !item.checked } : item,
+      ),
+    );
   }
 
   // Live R multiple: realized once an exit exists, otherwise planned to TP.
@@ -563,7 +599,7 @@ export default function TradesPage() {
         risk_percent: parseNumber(form.risk_percent),
         session: form.session || null,
         timeframe: form.timeframe || null,
-        notes: form.notes.trim() || null,
+        notes: serializeTradeNotes(form.notes, checklist),
         profit_loss: closed ? parseNumber(form.profit_loss) : null,
         rr: computeRR(form.direction, entry, stop, target),
         status: closed ? "Closed" : "Open",
@@ -1140,9 +1176,7 @@ export default function TradesPage() {
               <Select
                 label="Setup"
                 value={form.setup_id}
-                onChange={(e) =>
-                  setForm({ ...form, setup_id: e.target.value })
-                }
+                onChange={(e) => handleSetupChange(e.target.value)}
               >
                 <option value="">None</option>
                 {setups.map((s) => (
@@ -1166,6 +1200,57 @@ export default function TradesPage() {
                 />
               )}
             </div>
+
+            {checklist.length > 0 && (
+              <div className="rounded-md border border-edge bg-wash p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-medium text-ink">
+                    Setup checklist
+                  </span>
+                  <span className="tabular text-[12px] text-muted">
+                    Followed {checklistScore(checklist).done}/
+                    {checklistScore(checklist).total}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-3">
+                  {CHECKLIST_SECTIONS.map((section) => {
+                    const items = checklist
+                      .map((item, index) => ({ item, index }))
+                      .filter(({ item }) => item.section === section.key);
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={section.key}>
+                        <p className="text-[12px] font-medium text-faint">
+                          {section.heading}
+                        </p>
+                        <div className="mt-1.5 space-y-1">
+                          {items.map(({ item, index }) => (
+                            <label
+                              key={index}
+                              className="flex cursor-pointer items-start gap-2.5 rounded-md px-1.5 py-1 text-[14px] text-ink transition-colors duration-150 ease-out hover:bg-hover"
+                            >
+                              <input
+                                type="checkbox"
+                                className="mt-0.5 size-4 shrink-0 accent-primary"
+                                checked={item.checked}
+                                onChange={() => toggleChecklistItem(index)}
+                              />
+                              <span
+                                className={
+                                  item.checked ? "" : "text-muted"
+                                }
+                              >
+                                {item.text}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <SnapshotSlot

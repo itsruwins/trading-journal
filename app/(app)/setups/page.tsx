@@ -10,6 +10,14 @@ import {
   updateSetup,
   type SetupWithTrades,
 } from "@/src/lib/setups";
+import {
+  CHECKLIST_SECTIONS,
+  countItems,
+  linesToItems,
+  parseSetupChecklist,
+  serializeSetupChecklist,
+  type ChecklistSections,
+} from "@/src/lib/checklist";
 import { Button } from "@/src/components/ui/button";
 import { EmptyState } from "@/src/components/ui/empty-state";
 import { Modal } from "@/src/components/ui/modal";
@@ -17,6 +25,12 @@ import { TextField } from "@/src/components/ui/text-field";
 import { Textarea } from "@/src/components/ui/textarea";
 import { useToast } from "@/src/components/ui/toast";
 import { Table, TBody, TD, TH, THead, TR } from "@/src/components/ui/table";
+
+const SECTION_PLACEHOLDERS: Record<string, string> = {
+  entry: "Sweep of prior high\nDisplacement down\nOne item per line…",
+  confirmations: "FVG present\nVolume spike\nAligned with HTF bias",
+  invalidation: "Close back above the sweep\nNo displacement within 3 candles",
+};
 
 const SUGGESTIONS = [
   "SMT Divergence",
@@ -48,7 +62,12 @@ export default function SetupsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SetupWithTrades | null>(null);
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  // Each section is a textarea's raw text; one item per line.
+  const [sectionText, setSectionText] = useState<Record<string, string>>({
+    entry: "",
+    confirmations: "",
+    invalidation: "",
+  });
   const [nameError, setNameError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [quickAdding, setQuickAdding] = useState<string | null>(null);
@@ -82,7 +101,7 @@ export default function SetupsPage() {
   function openCreate() {
     setEditing(null);
     setName("");
-    setDescription("");
+    setSectionText({ entry: "", confirmations: "", invalidation: "" });
     setNameError(null);
     setFormOpen(true);
   }
@@ -90,7 +109,12 @@ export default function SetupsPage() {
   function openEdit(setup: SetupWithTrades) {
     setEditing(setup);
     setName(setup.name);
-    setDescription(setup.description ?? "");
+    const parsed = parseSetupChecklist(setup.description);
+    setSectionText({
+      entry: parsed.entry.join("\n"),
+      confirmations: parsed.confirmations.join("\n"),
+      invalidation: parsed.invalidation.join("\n"),
+    });
     setNameError(null);
     setFormOpen(true);
   }
@@ -127,12 +151,19 @@ export default function SetupsPage() {
       return;
     }
 
+    const sections: ChecklistSections = {
+      entry: linesToItems(sectionText.entry),
+      confirmations: linesToItems(sectionText.confirmations),
+      invalidation: linesToItems(sectionText.invalidation),
+    };
+    const description = serializeSetupChecklist(sections);
+
     setSaving(true);
     try {
       if (editing) {
         const updated = await updateSetup(editing.id, {
           name: trimmed,
-          description: description.trim() || null,
+          description,
         });
         setSetups((current) =>
           current
@@ -143,11 +174,7 @@ export default function SetupsPage() {
         );
         toast({ title: "Setup updated", variant: "success" });
       } else {
-        const created = await createSetup(
-          user.id,
-          trimmed,
-          description.trim() || null,
-        );
+        const created = await createSetup(user.id, trimmed, description);
         setSetups((current) =>
           [...current, { ...created, trades: [] }].sort((a, b) =>
             a.name.localeCompare(b.name),
@@ -257,15 +284,18 @@ export default function SetupsPage() {
               <TBody>
                 {setups.map((setup) => {
                   const stats = setupStats(setup);
+                  const rules = countItems(
+                    parseSetupChecklist(setup.description),
+                  );
                   return (
                     <TR key={setup.id}>
                       <TD className="whitespace-normal">
                         <p className="font-medium">{setup.name}</p>
-                        {setup.description && (
-                          <p className="mt-0.5 max-w-prose text-[13px] text-muted">
-                            {setup.description}
-                          </p>
-                        )}
+                        <p className="mt-0.5 text-[13px] text-muted">
+                          {rules > 0
+                            ? `${rules} ${rules === 1 ? "rule" : "rules"}`
+                            : "No checklist"}
+                        </p>
                       </TD>
                       <TD numeric className="text-muted">
                         {stats.total}
@@ -353,13 +383,25 @@ export default function SetupsPage() {
               if (nameError) setNameError(null);
             }}
           />
-          <Textarea
-            label="Description"
-            placeholder="Entry rules, confirmations, invalidation…"
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <p className="text-[13px] text-muted">
+            One item per line. Each becomes a checkbox when you log a trade
+            with this setup.
+          </p>
+          {CHECKLIST_SECTIONS.map((section) => (
+            <Textarea
+              key={section.key}
+              label={section.heading}
+              placeholder={SECTION_PLACEHOLDERS[section.key]}
+              rows={3}
+              value={sectionText[section.key]}
+              onChange={(e) =>
+                setSectionText((current) => ({
+                  ...current,
+                  [section.key]: e.target.value,
+                }))
+              }
+            />
+          ))}
         </form>
       </Modal>
 
