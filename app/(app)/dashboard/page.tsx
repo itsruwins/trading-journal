@@ -205,7 +205,6 @@ export default function DashboardPage() {
                   : "text-ink"
             }`}
           >
-            {stats.totalProfit > 0 ? "+" : ""}
             {money(stats.totalProfit, currency)}
           </p>
         </div>

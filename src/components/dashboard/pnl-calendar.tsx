@@ -312,7 +312,6 @@ export function PnlCalendar({
                     : "text-ink"
               }`}
             >
-              {selected.pnl > 0 ? "+" : ""}
               {money(selected.pnl)}
             </p>
             {selected.trades.map((trade) => (

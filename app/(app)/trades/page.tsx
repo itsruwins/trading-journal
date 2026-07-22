@@ -889,7 +889,6 @@ export default function TradesPage() {
                           pnl >= 0 ? "text-positive" : "text-negative"
                         }`}
                       >
-                        {pnl >= 0 ? "+" : ""}
                         {formatMoney(pnl, trade.accounts?.currency ?? "USD")}
                       </span>
                     ) : null}

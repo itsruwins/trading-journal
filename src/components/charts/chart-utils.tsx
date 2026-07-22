@@ -53,9 +53,7 @@ export function compactNumber(value: number): string {
 }
 
 export function signedCompact(value: number): string {
-  return `${value > 0 ? "+" : value < 0 ? "−" : ""}${compactNumber(
-    Math.abs(value),
-  )}`;
+  return `${value < 0 ? "−" : ""}${compactNumber(Math.abs(value))}`;
 }
 
 export function Tooltip({

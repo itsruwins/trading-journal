@@ -177,7 +177,6 @@ export default function TradeDetailPage() {
                 trade.profit_loss >= 0 ? "text-positive" : "text-negative"
               }`}
             >
-              {trade.profit_loss >= 0 ? "+" : ""}
               {formatMoney(trade.profit_loss, currency)}
             </p>
           )}

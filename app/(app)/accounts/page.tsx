@@ -337,7 +337,7 @@ export default function AccountsPage() {
                       </span>
                       {pct !== null && (
                         <span className={`tabular ${tone}`}>
-                          ({pct > 0 ? "+" : pct < 0 ? "−" : ""}
+                          ({pct < 0 ? "−" : ""}
                           {Math.abs(pct).toFixed(2)}%)
                         </span>
                       )}
