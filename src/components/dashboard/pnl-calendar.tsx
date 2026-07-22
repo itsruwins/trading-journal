@@ -125,24 +125,24 @@ export function PnlCalendar({
 
   return (
     <section className="rounded-lg border border-edge bg-surface p-3 sm:p-4">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1">
+      <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex items-center justify-center gap-1 sm:justify-start">
           <button
             type="button"
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <h3 className="min-w-36 text-center text-[15px] font-semibold tracking-[-0.01em] text-ink">
+          <h3 className="min-w-32 text-center text-[15px] font-semibold tracking-[-0.01em] text-ink">
             {monthLabel}
           </h3>
           <button
             type="button"
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
@@ -153,14 +153,14 @@ export function PnlCalendar({
                 setYear(now.getFullYear());
                 setMonth(now.getMonth());
               }}
-              className="ml-1 h-8 rounded-md px-3 text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:bg-hover"
+              className="ml-1 h-8 shrink-0 rounded-md px-3 text-[13px] font-medium text-ink transition-colors duration-150 ease-out hover:bg-hover"
             >
               Today
             </button>
           )}
         </div>
 
-        <p className="flex items-center gap-5 text-[13px]">
+        <p className="flex items-center justify-center gap-5 text-[13px] sm:justify-end">
           <span className="text-muted">
             P/L:{" "}
             <span

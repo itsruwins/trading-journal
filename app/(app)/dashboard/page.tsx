@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/src/lib/auth";
 import { getProfile } from "@/src/lib/profile";
+import { useProfile } from "@/src/lib/profile-context";
 import { listAccounts, type Account } from "@/src/lib/accounts";
 import { listTrades, type Trade } from "@/src/lib/trades";
 import {
@@ -13,17 +14,15 @@ import {
   equityPoints,
   filterTrades,
   monthlyPnl,
-  RANGES,
-  type RangeKey,
 } from "@/src/lib/stats";
 import { formatMoney } from "@/src/lib/format";
 import { signedCompact } from "@/src/components/charts/chart-utils";
 import { EquityCurve } from "@/src/components/charts/equity-curve";
 import { MonthlyBars } from "@/src/components/charts/monthly-bars";
+import { AccountSelector } from "@/src/components/dashboard/account-selector";
 import { PnlCalendar } from "@/src/components/dashboard/pnl-calendar";
 import { Card } from "@/src/components/ui/card";
 import { EmptyState } from "@/src/components/ui/empty-state";
-import { FilterSelect } from "@/src/components/ui/filter-select";
 import { useToast } from "@/src/components/ui/toast";
 
 function StatTile({
@@ -62,6 +61,7 @@ function money(value: number, currency: string | null): string {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { toast } = useToast();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -70,7 +70,6 @@ export default function DashboardPage() {
   );
   const [loaded, setLoaded] = useState(false);
   const [accountFilter, setAccountFilter] = useState("all");
-  const [range, setRange] = useState<RangeKey>("all");
 
   useEffect(() => {
     if (!user) return;
@@ -99,23 +98,15 @@ export default function DashboardPage() {
     };
   }, [user, toast]);
 
-  const filtered = useMemo(
-    () => filterTrades(trades, accountFilter, range),
-    [trades, accountFilter, range],
-  );
-  // The calendar scopes itself by month, so only the account filter applies.
-  const accountScoped = useMemo(
+  // Dashboard shows all-time data, scoped only by the selected account.
+  const scoped = useMemo(
     () => filterTrades(trades, accountFilter, "all"),
     [trades, accountFilter],
   );
-  const stats = useMemo(() => computeStats(filtered), [filtered]);
-  const equity = useMemo(() => equityPoints(filtered), [filtered]);
-  const months = useMemo(() => monthlyPnl(filtered), [filtered]);
-  const currency = useMemo(() => commonCurrency(filtered), [filtered]);
-  const calendarCurrency = useMemo(
-    () => commonCurrency(accountScoped),
-    [accountScoped],
-  );
+  const stats = useMemo(() => computeStats(scoped), [scoped]);
+  const equity = useMemo(() => equityPoints(scoped), [scoped]);
+  const months = useMemo(() => monthlyPnl(scoped), [scoped]);
+  const currency = useMemo(() => commonCurrency(scoped), [scoped]);
 
   if (!loaded) {
     return (
@@ -144,65 +135,45 @@ export default function DashboardPage() {
     );
   }
 
-  const filterChip = (active: boolean): string =>
-    `h-8 rounded-md px-3 text-[13px] font-medium transition-colors duration-150 ease-out ${
-      active
-        ? "bg-selected text-ink"
-        : "text-muted hover:bg-hover hover:text-ink"
-    }`;
-
   let profitFactorValue = "—";
   if (stats.profitFactor === Infinity) profitFactorValue = "∞";
   else if (stats.profitFactor != null)
     profitFactorValue = stats.profitFactor.toFixed(2);
 
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = profile?.display_name?.trim();
+
+  const profitTone =
+    stats.totalProfit > 0
+      ? "text-positive"
+      : stats.totalProfit < 0
+        ? "text-negative"
+        : "text-ink";
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div
-          role="radiogroup"
-          aria-label="Time range"
-          className="flex rounded-md border border-edge bg-surface p-0.5"
-        >
-          {RANGES.map((r) => (
-            <button
-              key={r.key}
-              type="button"
-              role="radio"
-              aria-checked={range === r.key}
-              onClick={() => setRange(r.key)}
-              className={filterChip(range === r.key)}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-        {accounts.length > 1 && (
-          <FilterSelect
-            aria-label="Filter by account"
-            value={accountFilter}
-            onChange={(e) => setAccountFilter(e.target.value)}
-          >
-            <option value="all">All accounts</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.account_name}
-              </option>
-            ))}
-          </FilterSelect>
-        )}
-
-        <div className="ml-auto flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[15px] text-muted">
+          {greeting}
+          {firstName && (
+            <>
+              , <span className="font-medium text-ink">{firstName}</span>!
+            </>
+          )}
+        </p>
+        <div className="flex items-center gap-2">
           <Link
             href="/accounts?new=1"
-            className="inline-flex h-9 select-none items-center justify-center gap-2 rounded-md border border-edge-strong px-3.5 text-[13px] font-medium text-ink transition-[background-color,transform] duration-150 ease-out hover:bg-raised active:scale-[0.98]"
+            className="inline-flex h-11 flex-1 select-none items-center justify-center gap-2 rounded-md border border-edge-strong px-4 text-[14px] font-medium text-ink transition-[background-color,transform] duration-150 ease-out hover:bg-raised active:scale-[0.98] sm:flex-none"
           >
             <Plus className="-ml-0.5 size-4" aria-hidden="true" />
             Add account
           </Link>
           <Link
             href="/trades?new=1"
-            className="inline-flex h-9 select-none items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
+            className="inline-flex h-11 flex-1 select-none items-center justify-center gap-2 rounded-md bg-primary px-4 text-[14px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98] sm:flex-none"
           >
             <Plus className="-ml-0.5 size-4" aria-hidden="true" />
             Log trade
@@ -210,34 +181,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-edge bg-surface px-5 py-4">
-        <div className="flex items-baseline gap-3">
-          <p className="text-[13px] font-medium text-faint">Total profit</p>
+      {accounts.length > 1 && (
+        <AccountSelector
+          accounts={accounts}
+          trades={trades}
+          selected={accountFilter}
+          onSelect={setAccountFilter}
+        />
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="col-span-2 flex flex-col justify-center rounded-lg border border-edge bg-surface p-4">
+          <p className="text-[12px] font-medium text-faint">Total profit</p>
           <p
-            className={`text-[28px] font-semibold tracking-[-0.02em] ${
-              stats.totalProfit > 0
-                ? "text-positive"
-                : stats.totalProfit < 0
-                  ? "text-negative"
-                  : "text-ink"
-            }`}
+            className={`mt-1.5 text-3xl font-semibold leading-none tracking-[-0.02em] ${profitTone}`}
           >
             {money(stats.totalProfit, currency)}
           </p>
+          <p className="mt-2 text-[12px] text-faint">
+            {stats.closedCount} closed{" "}
+            {stats.closedCount === 1 ? "trade" : "trades"}
+            {currency === null && stats.closedCount > 0 && (
+              <span> · mixed currencies</span>
+            )}
+          </p>
         </div>
-        <p className="text-[13px] text-muted">
-          {stats.closedCount} closed{" "}
-          {stats.closedCount === 1 ? "trade" : "trades"}
-          {currency === null && stats.closedCount > 0 && (
-            <span className="text-faint">
-              {" "}
-              · mixed currencies, shown unconverted
-            </span>
-          )}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile
           label="Total trades"
           value={String(stats.totalTrades)}
@@ -275,11 +243,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <PnlCalendar
-        trades={accountScoped}
-        timeZone={timeZone}
-        currency={calendarCurrency}
-      />
+      <PnlCalendar trades={scoped} timeZone={timeZone} currency={currency} />
 
       {equity.length > 0 ? (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -293,7 +257,7 @@ export default function DashboardPage() {
       ) : (
         <Card>
           <p className="py-8 text-center text-[14px] text-muted">
-            Charts appear once a trade in this range is closed with a P/L.
+            Charts appear once a trade is closed with a P/L.
           </p>
         </Card>
       )}

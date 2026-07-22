@@ -123,6 +123,15 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Hide scrollbar on horizontally-scrolling pill rows */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
