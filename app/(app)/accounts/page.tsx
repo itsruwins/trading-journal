@@ -97,7 +97,16 @@ export default function AccountsPage() {
     let cancelled = false;
     listAccounts()
       .then((data) => {
-        if (!cancelled) setAccounts(data);
+        if (cancelled) return;
+        setAccounts(data);
+        // Deep link from the dashboard's "Add account" quick action.
+        if (
+          typeof window !== "undefined" &&
+          new URLSearchParams(window.location.search).has("new")
+        ) {
+          openCreate();
+          window.history.replaceState(null, "", "/accounts");
+        }
       })
       .catch(() => {
         if (!cancelled) {

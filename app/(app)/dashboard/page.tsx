@@ -191,6 +191,23 @@ export default function DashboardPage() {
             ))}
           </FilterSelect>
         )}
+
+        <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/accounts?new=1"
+            className="inline-flex h-9 select-none items-center justify-center gap-2 rounded-md border border-edge-strong px-3.5 text-[13px] font-medium text-ink transition-[background-color,transform] duration-150 ease-out hover:bg-raised active:scale-[0.98]"
+          >
+            <Plus className="-ml-0.5 size-4" aria-hidden="true" />
+            Add account
+          </Link>
+          <Link
+            href="/trades?new=1"
+            className="inline-flex h-9 select-none items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
+          >
+            <Plus className="-ml-0.5 size-4" aria-hidden="true" />
+            Log trade
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-edge bg-surface px-5 py-4">

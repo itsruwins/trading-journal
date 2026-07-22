@@ -290,6 +290,16 @@ export default function TradesPage() {
         setSetups(setupData);
         setAllTags(tagData);
 
+        // Deep link from the dashboard's "Log trade" quick action.
+        if (
+          typeof window !== "undefined" &&
+          new URLSearchParams(window.location.search).has("new") &&
+          accountData.length > 0
+        ) {
+          openCreate(accountData);
+          window.history.replaceState(null, "", "/trades");
+        }
+
         const images = await listImagesForTrades(
           tradeData.map((t) => t.id),
         );
@@ -315,6 +325,8 @@ export default function TradesPage() {
     return () => {
       cancelled = true;
     };
+    // Mount-only load; openCreate is a stable handler we call at most once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
 
   const filtered = useMemo(
@@ -337,10 +349,10 @@ export default function TradesPage() {
     return slotFor(trade, "post") ?? slotFor(trade, "pre");
   }
 
-  function blankForm(): FormState {
+  function blankForm(accountList: Account[] = accounts): FormState {
     return {
       account_id:
-        accounts.find((a) => a.is_active)?.id ?? accounts[0]?.id ?? "",
+        accountList.find((a) => a.is_active)?.id ?? accountList[0]?.id ?? "",
       pair: "",
       direction: "Buy",
       entry_price: "",
@@ -432,9 +444,9 @@ export default function TradesPage() {
     setChecklist(value && value !== NEW_SETUP ? setupChecklist(value) : []);
   }
 
-  function openCreate() {
+  function openCreate(accountList?: Account[]) {
     setEditing(null);
-    setForm(blankForm());
+    setForm(blankForm(accountList));
     setSelectedTagIds([]);
     setChecklist([]);
     resetSlots(null);
@@ -778,7 +790,7 @@ export default function TradesPage() {
         title="Log your first trade"
         description="Pair, direction, prices, snapshots of the chart before and after — everything lives here, and the dashboard builds itself from what you log."
         action={
-          <Button onClick={openCreate}>
+          <Button onClick={() => openCreate()}>
             <Plus className="size-4" aria-hidden="true" />
             Log trade
           </Button>
@@ -814,7 +826,7 @@ export default function TradesPage() {
             {filtered.length} of {trades.length}
           </p>
           <div className="ml-auto">
-            <Button size="sm" onClick={openCreate}>
+            <Button size="sm" onClick={() => openCreate()}>
               <Plus className="size-4" aria-hidden="true" />
               Log trade
             </Button>
