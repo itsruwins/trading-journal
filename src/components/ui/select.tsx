@@ -15,6 +15,7 @@ export function Select({
   hint,
   className = "",
   id: idProp,
+  value,
   children,
   ...props
 }: SelectProps) {
@@ -39,6 +40,8 @@ export function Select({
           id={id}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
+          // Coerce a stray null to "" — a controlled select must never be null.
+          value={value ?? ""}
           className={`h-11 w-full appearance-none rounded-md border bg-surface px-3.5 pr-10 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-150 ease-out ${
             error
               ? "border-danger/60 focus:border-danger focus:shadow-[0_0_0_3px_var(--ring-danger)]"

@@ -6,12 +6,14 @@ import { ChevronDown } from "lucide-react";
 /** Compact select for toolbar filter rows; form fields use Select instead. */
 export function FilterSelect({
   className = "",
+  value,
   children,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className={`relative ${className}`}>
       <select
+        value={value ?? ""}
         className="h-9 w-full appearance-none rounded-md border border-edge bg-surface pl-3 pr-8 text-[13px] text-ink outline-none transition-colors duration-150 ease-out hover:border-edge-strong focus:border-ink/40"
         {...props}
       >

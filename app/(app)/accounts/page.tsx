@@ -140,7 +140,7 @@ export default function AccountsPage() {
       broker: account.broker ?? "",
       account_type: account.account_type ?? "live",
       initial_balance: String(account.initial_balance),
-      currency: account.currency,
+      currency: account.currency ?? "USD",
       is_active: account.is_active,
     });
     setNameError(null);

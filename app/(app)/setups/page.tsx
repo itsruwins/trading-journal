@@ -12,7 +12,6 @@ import {
 } from "@/src/lib/setups";
 import {
   CHECKLIST_SECTIONS,
-  countItems,
   linesToItems,
   parseSetupChecklist,
   serializeSetupChecklist,
@@ -24,7 +23,6 @@ import { Modal } from "@/src/components/ui/modal";
 import { TextField } from "@/src/components/ui/text-field";
 import { Textarea } from "@/src/components/ui/textarea";
 import { useToast } from "@/src/components/ui/toast";
-import { Table, TBody, TD, TH, THead, TR } from "@/src/components/ui/table";
 
 const SECTION_PLACEHOLDERS: Record<string, string> = {
   entry: "Sweep of prior high\nDisplacement down\nOne item per line…",
@@ -50,6 +48,15 @@ function setupStats(setup: SetupWithTrades) {
   const winRate =
     closed.length > 0 ? Math.round((wins / closed.length) * 100) : null;
   return { total, winRate };
+}
+
+function sectionPreviews(description: string | null) {
+  const parsed = parseSetupChecklist(description);
+  return CHECKLIST_SECTIONS.map((s) => ({
+    key: s.key,
+    heading: s.heading,
+    items: parsed[s.key],
+  })).filter((s) => s.items.length > 0);
 }
 
 export default function SetupsPage() {
@@ -223,9 +230,16 @@ export default function SetupsPage() {
   if (!loaded) {
     return (
       <div
-        className="h-64 animate-pulse rounded-lg border border-edge bg-surface"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
         aria-hidden="true"
-      />
+      >
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-44 animate-pulse rounded-lg border border-edge bg-surface"
+          />
+        ))}
+      </div>
     );
   }
 
@@ -271,64 +285,80 @@ export default function SetupsPage() {
             </Button>
           </div>
 
-          <section className="overflow-hidden rounded-lg border border-edge bg-surface">
-            <Table>
-              <THead>
-                <TR>
-                  <TH>Setup</TH>
-                  <TH numeric>Trades</TH>
-                  <TH numeric>Win rate</TH>
-                  <TH aria-label="Actions" />
-                </TR>
-              </THead>
-              <TBody>
-                {setups.map((setup) => {
-                  const stats = setupStats(setup);
-                  const rules = countItems(
-                    parseSetupChecklist(setup.description),
-                  );
-                  return (
-                    <TR key={setup.id}>
-                      <TD className="whitespace-normal">
-                        <p className="font-medium">{setup.name}</p>
-                        <p className="mt-0.5 text-[13px] text-muted">
-                          {rules > 0
-                            ? `${rules} ${rules === 1 ? "rule" : "rules"}`
-                            : "No checklist"}
-                        </p>
-                      </TD>
-                      <TD numeric className="text-muted">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {setups.map((setup) => {
+              const stats = setupStats(setup);
+              const sections = sectionPreviews(setup.description);
+              return (
+                <article
+                  key={setup.id}
+                  className="group flex flex-col rounded-lg border border-edge bg-surface p-5 transition-[border-color] duration-150 ease-out hover:border-edge-strong"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="min-w-0 truncate text-[16px] font-semibold tracking-[-0.01em] text-ink">
+                      {setup.name}
+                    </h2>
+                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-150 ease-out focus-within:opacity-100 group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(setup)}
+                        aria-label={`Edit ${setup.name}`}
+                        className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
+                      >
+                        <Pencil className="size-4" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleting(setup)}
+                        aria-label={`Delete ${setup.name}`}
+                        className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-negative/10 hover:text-negative"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-3 text-[13px] text-muted">
+                    <span>
+                      <span className="tabular font-medium text-ink">
                         {stats.total}
-                      </TD>
-                      <TD numeric className="text-muted">
+                      </span>{" "}
+                      {stats.total === 1 ? "trade" : "trades"}
+                    </span>
+                    <span className="text-edge-strong" aria-hidden="true">
+                      |
+                    </span>
+                    <span>
+                      <span className="tabular font-medium text-ink">
                         {stats.winRate != null ? `${stats.winRate}%` : "—"}
-                      </TD>
-                      <TD className="w-0">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(setup)}
-                            aria-label={`Edit ${setup.name}`}
-                            className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-hover hover:text-ink"
-                          >
-                            <Pencil className="size-4" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleting(setup)}
-                            aria-label={`Delete ${setup.name}`}
-                            className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-negative/10 hover:text-negative"
-                          >
-                            <Trash2 className="size-4" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </TD>
-                    </TR>
-                  );
-                })}
-              </TBody>
-            </Table>
-          </section>
+                      </span>{" "}
+                      win rate
+                    </span>
+                  </div>
+
+                  {sections.length > 0 ? (
+                    <div className="mt-5 flex flex-wrap gap-1.5">
+                      {sections.map((s) => (
+                        <span
+                          key={s.key}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-edge px-2.5 py-1 text-[12px] text-muted"
+                        >
+                          {s.heading}
+                          <span className="tabular font-medium text-ink">
+                            {s.items.length}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-5 text-[13px] text-faint">
+                      No checklist yet
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
 
           {remainingSuggestions.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
