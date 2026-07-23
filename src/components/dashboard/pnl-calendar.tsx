@@ -245,7 +245,7 @@ export function PnlCalendar({
                         {cell.dayOfMonth}
                       </span>
                       {hasTrades && (
-                        <span className="hidden flex-1 flex-col items-center justify-center gap-0.5 pb-1 text-center sm:flex">
+                        <span className="hidden w-full flex-1 flex-col items-center justify-center gap-0.5 pb-1 text-center sm:flex">
                           <span
                             className={`tabular text-[13px] font-semibold ${pnlTone(
                               day.pnl,
