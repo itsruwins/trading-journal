@@ -810,9 +810,10 @@ export default function TradesPage() {
   } else {
     content = (
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 sm:flex-wrap sm:gap-3">
           <FilterSelect
             aria-label="Filter by account"
+            className="min-w-0 flex-1 sm:w-auto sm:flex-none"
             value={accountFilter}
             onChange={(e) => setAccountFilter(e.target.value)}
           >
@@ -826,6 +827,7 @@ export default function TradesPage() {
           </FilterSelect>
           <FilterSelect
             aria-label="Filter by status"
+            className="min-w-0 flex-1 sm:w-auto sm:flex-none"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -833,25 +835,29 @@ export default function TradesPage() {
             <option value="Open">Open</option>
             <option value="Closed">Closed</option>
           </FilterSelect>
-          <p className="text-[13px] text-muted">
+
+          <p className="hidden shrink-0 text-[13px] text-muted sm:block">
             {filtered.length} of {trades.length}
           </p>
-          <div className="ml-auto">
-            {accounts.length === 0 ? (
-              <Link
-                href="/accounts?new=1"
-                className="inline-flex h-9 select-none items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
-              >
-                <Plus className="-ml-0.5 size-4" aria-hidden="true" />
-                Add account
-              </Link>
-            ) : (
-              <Button size="sm" onClick={() => openCreate()}>
-                <Plus className="size-4" aria-hidden="true" />
-                Log trade
-              </Button>
-            )}
-          </div>
+
+          {accounts.length === 0 ? (
+            <Link
+              href="/accounts?new=1"
+              className="inline-flex h-9 min-w-0 flex-1 select-none items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-[13px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98] sm:ml-auto sm:flex-none sm:px-3.5"
+            >
+              <Plus className="size-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">Add account</span>
+            </Link>
+          ) : (
+            <Button
+              size="sm"
+              className="min-w-0 flex-1 sm:ml-auto sm:flex-none"
+              onClick={() => openCreate()}
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Log trade
+            </Button>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
