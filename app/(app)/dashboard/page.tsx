@@ -37,8 +37,8 @@ function StatTile({
   tone?: "positive" | "negative";
 }) {
   return (
-    <div className="rounded-lg border border-edge bg-surface p-4">
-      <p className="text-[12px] font-medium text-faint">{label}</p>
+    <div className="min-w-0 rounded-lg border border-edge bg-surface p-4">
+      <p className="truncate text-[12px] font-medium text-faint">{label}</p>
       <p
         className={`mt-1.5 truncate text-xl font-semibold tracking-[-0.01em] ${
           tone === "positive"
@@ -191,10 +191,10 @@ export default function DashboardPage() {
       )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="col-span-2 flex flex-col justify-center rounded-lg border border-edge bg-surface p-4">
+        <div className="col-span-2 flex min-w-0 flex-col justify-center rounded-lg border border-edge bg-surface p-4">
           <p className="text-[12px] font-medium text-faint">Total profit</p>
           <p
-            className={`mt-1.5 text-3xl font-semibold leading-none tracking-[-0.02em] ${profitTone}`}
+            className={`mt-1.5 truncate text-3xl font-semibold leading-none tracking-[-0.02em] ${profitTone}`}
           >
             {money(stats.totalProfit, currency)}
           </p>

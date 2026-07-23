@@ -48,7 +48,7 @@ function AccountCard({
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={`flex flex-col rounded-md border p-4 text-left transition-colors duration-150 ease-out active:scale-[0.99] ${
+      className={`flex min-w-0 flex-col rounded-md border p-4 text-left transition-colors duration-150 ease-out active:scale-[0.99] ${
         selected
           ? "border-ink/50 bg-selected"
           : "border-edge bg-canvas hover:border-edge-strong"
