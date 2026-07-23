@@ -102,11 +102,19 @@
   --radius-lg: 0.875rem;
 }
 
+html {
+  /* Never let a stray-wide element create a page horizontal scrollbar.
+     `clip` (unlike `hidden`) doesn't create a scroll container, so sticky
+     headers and inner overflow-auto regions keep working. */
+  overflow-x: clip;
+}
+
 body {
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 ::selection {
