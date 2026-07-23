@@ -4,9 +4,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ArrowDownRight, ArrowUpRight, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/src/lib/auth";
 import {
+  countTradesForAccount,
   createAccount,
   deleteAccount,
+  deleteAccountAndTrades,
   listAccounts,
+  unassignTradesAndDeleteAccount,
   updateAccount,
   type Account,
 } from "@/src/lib/accounts";
@@ -92,6 +95,10 @@ export default function AccountsPage() {
 
   const [deleting, setDeleting] = useState<Account | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [tradeCount, setTradeCount] = useState<number | null>(null);
+  // "delete": remove account + its trades. "keep": unassign trades, keep them.
+  const [deleteMode, setDeleteMode] = useState<"delete" | "keep">("delete");
+  const [confirmText, setConfirmText] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -206,24 +213,44 @@ export default function AccountsPage() {
     }
   }
 
+  function openDelete(account: Account) {
+    setDeleting(account);
+    setDeleteMode("delete");
+    setConfirmText("");
+    setTradeCount(null);
+    countTradesForAccount(account.id)
+      .then(setTradeCount)
+      .catch(() => setTradeCount(0));
+  }
+
   async function handleDelete() {
     if (!deleting) return;
     setDeleteBusy(true);
     try {
-      await deleteAccount(deleting.id);
-      setAccounts((current) =>
-        current.filter((a) => a.id !== deleting.id),
-      );
-      toast({ title: "Account deleted", variant: "success" });
+      if ((tradeCount ?? 0) === 0) {
+        await deleteAccount(deleting.id);
+      } else if (deleteMode === "keep") {
+        await unassignTradesAndDeleteAccount(deleting.id);
+      } else {
+        await deleteAccountAndTrades(deleting.id);
+      }
+      setAccounts((current) => current.filter((a) => a.id !== deleting.id));
+      toast({
+        title:
+          deleteMode === "keep" && (tradeCount ?? 0) > 0
+            ? "Account deleted, trades kept"
+            : "Account deleted",
+        variant: "success",
+      });
       setDeleting(null);
     } catch (error) {
       const code = (error as { code?: string })?.code;
       toast({
         title: "Couldn't delete the account",
         description:
-          code === "23503"
-            ? "This account has trades attached to it. Delete or reassign those trades first."
-            : "Please try again.",
+          code === "23502"
+            ? "These trades require an account, so they can't be kept unassigned. Choose “Delete everything” instead."
+            : (error as { message?: string })?.message ?? "Please try again.",
         variant: "error",
       });
     } finally {
@@ -246,6 +273,18 @@ export default function AccountsPage() {
       </div>
     );
   }
+
+  const deleteCount = tradeCount ?? 0;
+  const needsTypeConfirm = deleteCount > 0 && deleteMode === "delete";
+  const canConfirmDelete =
+    tradeCount !== null &&
+    (!needsTypeConfirm || confirmText.trim() === deleting?.account_name);
+  const deleteLabel =
+    deleteCount === 0
+      ? "Delete account"
+      : deleteMode === "keep"
+        ? "Delete account, keep trades"
+        : "Delete everything";
 
   return (
     <>
@@ -310,7 +349,7 @@ export default function AccountsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setDeleting(account)}
+                        onClick={() => openDelete(account)}
                         aria-label={`Delete ${account.account_name}`}
                         className="flex size-8 items-center justify-center rounded-md text-faint transition-colors duration-150 ease-out hover:bg-negative/10 hover:text-negative"
                       >
@@ -496,7 +535,6 @@ export default function AccountsPage() {
         open={deleting !== null}
         onClose={() => setDeleting(null)}
         title={`Delete ${deleting?.account_name ?? "account"}?`}
-        description="This permanently removes the account. Trades attached to it must be deleted or reassigned first."
         footer={
           <>
             <Button
@@ -512,13 +550,88 @@ export default function AccountsPage() {
               variant="danger"
               size="sm"
               loading={deleteBusy}
+              disabled={!canConfirmDelete}
               onClick={handleDelete}
             >
-              Delete account
+              {deleteLabel}
             </Button>
           </>
         }
-      />
+      >
+        {deleting &&
+          (tradeCount === null ? (
+            <p className="text-[14px] text-muted">Checking for trades…</p>
+          ) : tradeCount === 0 ? (
+            <p className="text-[14px] leading-relaxed text-muted">
+              This account has no trades. Deleting it is permanent and
+              can&apos;t be undone.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-[14px] leading-relaxed text-muted">
+                This account has{" "}
+                <span className="font-medium text-ink">
+                  {tradeCount} {tradeCount === 1 ? "trade" : "trades"}
+                </span>{" "}
+                logged against it. Choose what happens to them.
+              </p>
+
+              <div role="radiogroup" className="space-y-2">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={deleteMode === "delete"}
+                  onClick={() => setDeleteMode("delete")}
+                  className={`w-full rounded-md border p-3 text-left transition-colors duration-150 ease-out ${
+                    deleteMode === "delete"
+                      ? "border-negative/50 bg-negative/10"
+                      : "border-edge hover:border-edge-strong"
+                  }`}
+                >
+                  <p className="text-[14px] font-medium text-ink">
+                    Delete the account and its {tradeCount}{" "}
+                    {tradeCount === 1 ? "trade" : "trades"}
+                  </p>
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
+                    Permanently removes every trade, screenshot, and tag on
+                    this account. This can&apos;t be undone.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={deleteMode === "keep"}
+                  onClick={() => setDeleteMode("keep")}
+                  className={`w-full rounded-md border p-3 text-left transition-colors duration-150 ease-out ${
+                    deleteMode === "keep"
+                      ? "border-ink/50 bg-selected"
+                      : "border-edge hover:border-edge-strong"
+                  }`}
+                >
+                  <p className="text-[14px] font-medium text-ink">
+                    Keep the {tradeCount}{" "}
+                    {tradeCount === 1 ? "trade" : "trades"}
+                  </p>
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
+                    Deletes the account but keeps the trade history —
+                    they&apos;ll no longer be tied to any account.
+                  </p>
+                </button>
+              </div>
+
+              {deleteMode === "delete" && (
+                <TextField
+                  label={`Type “${deleting.account_name}” to confirm`}
+                  autoComplete="off"
+                  placeholder={deleting.account_name}
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                />
+              )}
+            </div>
+          ))}
+      </Modal>
     </>
   );
 }

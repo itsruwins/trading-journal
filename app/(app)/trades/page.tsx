@@ -329,11 +329,19 @@ export default function TradesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
 
+  const hasUnassigned = useMemo(
+    () => trades.some((t) => !t.account_id),
+    [trades],
+  );
+
   const filtered = useMemo(
     () =>
       trades.filter(
         (t) =>
-          (accountFilter === "all" || t.account_id === accountFilter) &&
+          (accountFilter === "all" ||
+            (accountFilter === "unassigned"
+              ? !t.account_id
+              : t.account_id === accountFilter)) &&
           (statusFilter === "all" || t.status === statusFilter),
       ),
     [trades, accountFilter, statusFilter],
@@ -458,7 +466,7 @@ export default function TradesPage() {
     setEditing(trade);
     const { prose, checklist: savedChecklist } = parseTradeNotes(trade.notes);
     setForm({
-      account_id: trade.account_id,
+      account_id: trade.account_id ?? "",
       pair: trade.pair,
       direction: trade.direction,
       entry_price: String(trade.entry_price),
@@ -766,7 +774,9 @@ export default function TradesPage() {
     );
   }
 
-  if (accounts.length === 0) {
+  // Only block the whole page when there's genuinely nothing to show. Kept
+  // (unassigned) trades still render even after every account is deleted.
+  if (accounts.length === 0 && trades.length === 0) {
     return (
       <EmptyState
         title="Create an account first"
@@ -812,6 +822,7 @@ export default function TradesPage() {
                 {a.account_name}
               </option>
             ))}
+            {hasUnassigned && <option value="unassigned">No account</option>}
           </FilterSelect>
           <FilterSelect
             aria-label="Filter by status"
@@ -826,10 +837,20 @@ export default function TradesPage() {
             {filtered.length} of {trades.length}
           </p>
           <div className="ml-auto">
-            <Button size="sm" onClick={() => openCreate()}>
-              <Plus className="size-4" aria-hidden="true" />
-              Log trade
-            </Button>
+            {accounts.length === 0 ? (
+              <Link
+                href="/accounts?new=1"
+                className="inline-flex h-9 select-none items-center justify-center gap-2 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-fg transition-[background-color,transform] duration-150 ease-out hover:bg-primary-hover active:scale-[0.98]"
+              >
+                <Plus className="-ml-0.5 size-4" aria-hidden="true" />
+                Add account
+              </Link>
+            ) : (
+              <Button size="sm" onClick={() => openCreate()}>
+                <Plus className="size-4" aria-hidden="true" />
+                Log trade
+              </Button>
+            )}
           </div>
         </div>
 
@@ -890,6 +911,11 @@ export default function TradesPage() {
                         )}
                         {trade.direction === "Buy" ? "Long" : "Short"}
                       </span>
+                      {!trade.account_id && (
+                        <span className="shrink-0 rounded-full border border-edge bg-hover px-2 py-0.5 text-[11px] font-medium text-muted">
+                          No account
+                        </span>
+                      )}
                     </span>
                     {trade.status === "Open" ? (
                       <span className="shrink-0 rounded-full border border-edge bg-hover px-2 py-0.5 text-[11px] font-medium text-muted">

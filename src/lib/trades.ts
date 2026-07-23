@@ -7,7 +7,7 @@ export type TradeStatus = "Open" | "Closed" | "Cancelled";
 export type Trade = {
   id: string;
   user_id: string;
-  account_id: string;
+  account_id: string | null; // null once its account is deleted-and-kept
   setup_id: string | null;
   pair: string;
   direction: TradeDirection;
