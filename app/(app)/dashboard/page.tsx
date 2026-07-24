@@ -20,6 +20,7 @@ import { signedCompact } from "@/src/components/charts/chart-utils";
 import { EquityCurve } from "@/src/components/charts/equity-curve";
 import { MonthlyBars } from "@/src/components/charts/monthly-bars";
 import { AccountSelector } from "@/src/components/dashboard/account-selector";
+import { AccountSnapshot } from "@/src/components/dashboard/account-snapshot";
 import { PnlCalendar } from "@/src/components/dashboard/pnl-calendar";
 import { Card } from "@/src/components/ui/card";
 import { EmptyState } from "@/src/components/ui/empty-state";
@@ -181,14 +182,16 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {accounts.length > 1 && (
+      {accounts.length > 1 ? (
         <AccountSelector
           accounts={accounts}
           trades={trades}
           selected={accountFilter}
           onSelect={setAccountFilter}
         />
-      )}
+      ) : accounts.length === 1 ? (
+        <AccountSnapshot account={accounts[0]} />
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="col-span-2 flex min-w-0 flex-col justify-center rounded-lg border border-edge bg-surface p-4">
