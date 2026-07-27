@@ -107,7 +107,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-end gap-2 sm:inset-x-auto sm:bottom-6 sm:right-6">
+      {/* Stacked above the dock rather than beside it — on a narrow window the
+          centred dock and a right-aligned toast would otherwise overlap. */}
+      <div className="pointer-events-none fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-6">
         {items.map((item) => (
           <ToastCard key={item.id} item={item} onDismiss={dismiss} />
         ))}

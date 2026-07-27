@@ -780,7 +780,7 @@ export default function TradesPage() {
     return (
       <EmptyState
         title="Create an account first"
-        description="Every trade is logged against a trading account. Add your first account, then come back to start journaling."
+        description="Every trade is logged against a trading account. Add your first account, then come back to log your first trade."
         action={
           <Link
             href="/accounts"

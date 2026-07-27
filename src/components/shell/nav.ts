@@ -1,8 +1,6 @@
 import {
   ChartCandlestick,
-  ClipboardCheck,
   LayoutGrid,
-  NotebookPen,
   Settings,
   Tags,
   Target,
@@ -16,12 +14,18 @@ export type NavItem = {
   icon: LucideIcon;
 };
 
+/* Nav is ordered by how often a destination is opened, not by feature weight.
+   Dashboard/Trades/Accounts are daily; Setups and Tags are vocabulary you
+   define once and then consume inside the trade form, so they live one level
+   down under "More" rather than competing for a top-level slot. */
+
 export const MAIN_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { href: "/trades", label: "Trades", icon: ChartCandlestick },
-  { href: "/journal", label: "Journal", icon: NotebookPen },
-  { href: "/reviews", label: "Reviews", icon: ClipboardCheck },
   { href: "/accounts", label: "Accounts", icon: Wallet },
+];
+
+export const MORE_NAV: NavItem[] = [
   { href: "/setups", label: "Setups", icon: Target },
   { href: "/tags", label: "Tags", icon: Tags },
 ];
@@ -32,4 +36,10 @@ export const SETTINGS_NAV: NavItem = {
   icon: Settings,
 };
 
-export const ALL_NAV: NavItem[] = [...MAIN_NAV, SETTINGS_NAV];
+/** Every routable destination — the Topbar resolves its title from this. */
+export const ALL_NAV: NavItem[] = [...MAIN_NAV, ...MORE_NAV, SETTINGS_NAV];
+
+/** A nav item owns its own sub-routes, so /trades/[id] still lights up Trades. */
+export function isActiveHref(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}

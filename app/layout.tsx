@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/src/lib/auth";
 import { ThemeProvider } from "@/src/lib/theme";
@@ -21,6 +21,12 @@ export const metadata: Metadata = {
   },
   description:
     "A premium journal for serious traders — log trades, review performance, refine your edge.",
+};
+
+/* The dock sits against the bottom edge, so the page has to extend into the
+   home-indicator area — env(safe-area-inset-*) reports 0 without this. */
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 const themeInit = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){document.documentElement.setAttribute("data-theme","dark")}})()`;

@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Menu, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/lib/auth";
 import { useProfile } from "@/src/lib/profile-context";
+import { Logo } from "@/src/components/logo";
 import { ThemeToggle } from "@/src/components/ui/theme-toggle";
-import { ALL_NAV } from "./nav";
+import { ALL_NAV, isActiveHref } from "./nav";
 
 function UserMenu() {
   const { user } = useAuth();
@@ -100,25 +101,21 @@ function UserMenu() {
   );
 }
 
-export function Topbar({ onMenuOpen }: { onMenuOpen: () => void }) {
+export function Topbar() {
   const pathname = usePathname();
   const title =
-    ALL_NAV.find(
-      (item) =>
-        pathname === item.href || pathname.startsWith(`${item.href}/`),
-    )?.label ?? "";
+    ALL_NAV.find((item) => isActiveHref(pathname, item.href))?.label ?? "";
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b border-edge bg-canvas/75 px-4 backdrop-blur-md sm:px-6">
-      <button
-        type="button"
-        onClick={onMenuOpen}
-        aria-label="Open navigation"
-        className="flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:bg-hover hover:text-ink lg:hidden"
+      <Link
+        href="/dashboard"
+        aria-label="Trading Journal — dashboard"
+        className="flex shrink-0 items-center rounded-md transition-opacity duration-150 ease-out hover:opacity-80"
       >
-        <Menu className="size-5" aria-hidden="true" />
-      </button>
-      <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">
+        <Logo compact />
+      </Link>
+      <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">
         {title}
       </h1>
       <div className="ml-auto flex items-center gap-2">

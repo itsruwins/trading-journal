@@ -6,35 +6,29 @@ import { useAuth } from "@/src/lib/auth";
 import { ProfileProvider } from "@/src/lib/profile-context";
 import { Spinner } from "@/src/components/ui/spinner";
 import { ToastProvider } from "@/src/components/ui/toast";
-import { Sidebar } from "@/src/components/shell/sidebar";
 import { Topbar } from "@/src/components/shell/topbar";
-import { MobileNav } from "@/src/components/shell/mobile-nav";
-
-const SIDEBAR_KEY = "sidebar-collapsed";
+import { Dock } from "@/src/components/shell/dock";
+import { CommandPalette } from "@/src/components/shell/command-palette";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
   const router = useRouter();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  // Lazy init: the sidebar isn't in the first hydrated frame (auth gate
-  // renders a spinner), so reading localStorage here is mismatch-safe.
-  const [collapsed, setCollapsed] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.localStorage.getItem(SIDEBAR_KEY) === "1",
-  );
-
-  function toggleSidebar() {
-    setCollapsed((current) => {
-      const next = !current;
-      window.localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
-      return next;
-    });
-  }
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) router.replace("/login");
   }, [loading, session, router]);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, []);
 
   if (loading || !session) {
     return (
@@ -51,16 +45,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ProfileProvider>
       <ToastProvider>
-        <div className="flex min-h-dvh">
-          <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Topbar onMenuOpen={() => setDrawerOpen(true)} />
-            <main className="flex-1 overflow-x-clip px-4 py-8 sm:px-6 lg:px-8">
-              <div className="mx-auto w-full max-w-6xl">{children}</div>
-            </main>
-          </div>
+        <div className="flex min-h-dvh flex-col">
+          <Topbar />
+          {/* The dock floats over the page, so the bottom padding here is what
+              keeps the last row of any list clear of it. */}
+          <main className="flex-1 overflow-x-clip px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-6xl">{children}</div>
+          </main>
         </div>
-        <MobileNav open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        <Dock />
+        <CommandPalette
+          open={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+        />
       </ToastProvider>
     </ProfileProvider>
   );
