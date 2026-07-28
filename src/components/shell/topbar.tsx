@@ -107,7 +107,7 @@ export function Topbar() {
     ALL_NAV.find((item) => isActiveHref(pathname, item.href))?.label ?? "";
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b border-edge bg-canvas/75 px-4 backdrop-blur-md sm:px-6">
+    <header className="glass-bar sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 px-4 sm:px-6">
       <Link
         href="/dashboard"
         aria-label="Trading Journal — dashboard"

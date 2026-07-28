@@ -38,6 +38,25 @@
   --ring-danger: oklch(0.7 0.18 25 / 0.18);
   --chart-line: oklch(0.78 0 0);
   --backdrop: oklch(0 0 0 / 0.6);
+
+  /* Liquid Glass. `clear` carries the floating chrome (dock, More panel);
+     `regular` is the more opaque variant for surfaces that sit directly
+     behind text, per Apple's own split. */
+  --glass-tint-clear: oklch(0.15 0 0 / 0.55);
+  --glass-tint-regular: oklch(0.14 0 0 / 0.72);
+  --glass-rim-hi: oklch(1 0 0 / 0.18);
+  --glass-rim-lo: oklch(1 0 0 / 0.08);
+  --glass-sheen: oklch(1 0 0 / 0.04);
+  --glass-shade: oklch(0 0 0 / 0.55);
+
+  /* Selected chip: the original --selected value, so the highlight reads at
+     the same weight it always did. The glass character comes from the rim,
+     sheen and lift below rather than from a brighter fill. */
+  --glass-chip: oklch(1 0 0 / 0.1);
+  --glass-chip-rim-hi: oklch(1 0 0 / 0.14);
+  --glass-chip-rim-lo: oklch(1 0 0 / 0.06);
+  --glass-chip-sheen: oklch(1 0 0 / 0.08);
+  --glass-chip-shade: oklch(0 0 0 / 0.34);
 }
 
 :root[data-theme="light"] {
@@ -72,6 +91,24 @@
   --ring-danger: oklch(0.55 0.19 25 / 0.18);
   --chart-line: oklch(0.35 0 0);
   --backdrop: oklch(0 0 0 / 0.35);
+
+  /* Light glass leans on a bright rim and a soft shade rather than tint
+     opacity — a light translucent panel over light content needs the edge
+     to carry the separation. */
+  --glass-tint-clear: oklch(1 0 0 / 0.5);
+  --glass-tint-regular: oklch(1 0 0 / 0.8);
+  --glass-rim-hi: oklch(0 0 0 / 0.14);
+  --glass-rim-lo: oklch(0 0 0 / 0.06);
+  --glass-sheen: oklch(1 0 0 / 0.12);
+  --glass-shade: oklch(0 0 0 / 0.16);
+
+  /* Matches light --selected: a darker well rather than a lighter pill, which
+     is the only direction that separates from an already-white dock. */
+  --glass-chip: oklch(0 0 0 / 0.08);
+  --glass-chip-rim-hi: oklch(0 0 0 / 0.12);
+  --glass-chip-rim-lo: oklch(0 0 0 / 0.05);
+  --glass-chip-sheen: oklch(1 0 0 / 0.55);
+  --glass-chip-shade: oklch(0 0 0 / 0.18);
 }
 
 @theme inline {
@@ -259,5 +296,226 @@ dialog[data-closing]::backdrop {
   .modal-exit,
   .drawer-exit {
     animation: fade-out 0.1s ease-out both;
+  }
+}
+
+@layer components {
+  /* ==========================================================================
+     Liquid Glass
+
+     Four stacked signals, because the browser can't give us the real material:
+       1. blur + saturate      the universal floor (every engine)
+       2. tint                 theme-aware body colour
+       3. specular rim         ::before, a gradient border via mask-composite
+       4. edge sheen           ::after, denser at the rim where light gathers
+
+     Rim refraction is layered on top of this by `.liquid-glass--refract`, which
+     only resolves in Chromium; everywhere else the four signals above stand on
+     their own. See src/lib/glass-lens.ts.
+     ========================================================================== */
+
+  .liquid-glass {
+    /* Space toggle: empty by default, set to `url(#…)` inline by the component
+       when a lens map resolves. Keeping it a custom property (rather than an
+       inline backdrop-filter) is what lets the prefers-* blocks below still
+       win — an inline declaration would outrank them. */
+    --glass-refract: ;
+
+    position: relative;
+    isolation: isolate;
+    background-color: var(--glass-tint);
+    -webkit-backdrop-filter: var(--glass-refract) var(--glass-backdrop);
+    backdrop-filter: var(--glass-refract) var(--glass-backdrop);
+    /* With the rim at hairline weight the shadow is what lifts the pane off
+       the page, so it carries more of the depth than it used to. */
+    box-shadow:
+      0 20px 48px -14px var(--glass-shade),
+      0 4px 12px -4px var(--glass-shade),
+      inset 0 1px 0 0 var(--glass-sheen);
+  }
+
+  .liquid-glass--clear {
+    --glass-tint: var(--glass-tint-clear);
+    /* Saturation carries the vibrancy; brightness stays modest on purpose.
+       A strong lift looks great over colourful content but turns the pane
+       into a flat pale slab wherever the backdrop is near-uniform dark —
+       which is most of this app. The silver reads from the rim, not the fill. */
+    --glass-backdrop: blur(24px) saturate(190%) brightness(1.08);
+  }
+
+  .liquid-glass--regular {
+    --glass-tint: var(--glass-tint-regular);
+    --glass-backdrop: blur(14px) saturate(150%);
+  }
+
+  /* Specular rim: a 1px gradient border, bright where light would catch and
+     falling away around the curve. Carries most of the "this is a physical
+     object" read, and costs one pseudo-element. */
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    /* Continuous at hairline weight — a gradient that dips to transparent
+       reads as a broken outline once the peak is only 18% white. */
+    background: linear-gradient(
+      var(--glass-rim-angle, 145deg),
+      var(--glass-rim-hi) 0%,
+      var(--glass-rim-lo) 35%,
+      var(--glass-rim-lo) 65%,
+      var(--glass-rim-hi) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Specular bloom. Its origin tracks the pointer (see Dock), which is the web
+     stand-in for the way Apple's rim highlight answers to device tilt. With no
+     pointer it rests high-left, matching the rim's default light source. */
+  .liquid-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: radial-gradient(
+      70% 150% at var(--glass-spec-x, 26%) var(--glass-spec-y, 0%),
+      var(--glass-sheen) 0%,
+      transparent 68%
+    );
+    mix-blend-mode: plus-lighter;
+    pointer-events: none;
+  }
+
+  .liquid-glass > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Raised glass chip — the "selected" affordance on a surface that is itself
+     glass. Deliberately no backdrop-filter: stacking a second blur on the
+     dock's blur is exactly what SwiftUI's GlassEffectContainer exists to
+     avoid, and on the web it only doubles the compositing cost and washes the
+     result out. The chip separates by being more opaque than what it sits on,
+     plus its own specular rim and a small lift. */
+  .glass-chip {
+    position: relative;
+    background-color: var(--glass-chip);
+    box-shadow:
+      0 1px 2px -1px var(--glass-chip-shade),
+      0 4px 10px -4px var(--glass-chip-shade),
+      inset 0 1px 0 0 var(--glass-chip-sheen);
+  }
+
+  .glass-chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      150deg,
+      var(--glass-chip-rim-hi) 0%,
+      var(--glass-chip-rim-lo) 40%,
+      var(--glass-chip-rim-lo) 70%,
+      var(--glass-chip-rim-hi) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Full-bleed variant for the topbar. Same material and tokens, but a bar that
+     runs to both viewport edges must not carry a ring — it gets a hairline and
+     a scroll-edge fade where it meets content instead. Deliberately no
+     refraction: the page title sits directly on this surface. */
+  .glass-bar {
+    position: relative;
+    background-color: var(--glass-tint-regular);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+    border-bottom: 1px solid var(--glass-rim-lo);
+  }
+
+  .glass-bar::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 12px;
+    background: linear-gradient(to bottom, var(--glass-shade), transparent);
+    pointer-events: none;
+  }
+
+  /* --- Escape hatches -------------------------------------------------------
+     Apple shipped these for exactly this reason; a copy of the aesthetic
+     without them is a copy of the mistake. */
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-chip {
+      background-color: var(--raised);
+      box-shadow: none;
+    }
+    .glass-chip::before {
+      display: none;
+    }
+    .liquid-glass,
+    .glass-bar {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background-color: var(--raised);
+    }
+    .liquid-glass::after,
+    .glass-bar::after {
+      display: none;
+    }
+    .glass-bar {
+      background-color: var(--canvas);
+      border-bottom-color: var(--edge);
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .glass-chip {
+      background-color: var(--raised);
+      border: 1px solid var(--ink);
+      box-shadow: none;
+    }
+    .glass-chip::before {
+      display: none;
+    }
+    .liquid-glass,
+    .glass-bar {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background-color: var(--raised);
+    }
+    .liquid-glass {
+      border: 1px solid var(--ink);
+    }
+    .glass-bar {
+      background-color: var(--canvas);
+      border-bottom-color: var(--ink);
+    }
+    .liquid-glass::before,
+    .liquid-glass::after,
+    .glass-bar::after {
+      display: none;
+    }
   }
 }
