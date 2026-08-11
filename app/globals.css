@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
+/* The third selector scopes the dark palette to a subtree. The landing page
+   uses it to stay dark whatever theme the app has saved, without fighting
+   ThemeProvider over the attribute on <html>. */
 :root,
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+[data-theme-scope="dark"] {
   color-scheme: dark;
 
   /* Surfaces — pure neutral, zero chroma */
@@ -517,5 +521,136 @@ dialog[data-closing]::backdrop {
     .glass-bar::after {
       display: none;
     }
+  }
+}
+
+/* ==========================================================================
+   Landing page
+
+   Marketing surface only. Everything here is scoped to a class the app shell
+   never uses, so none of it can leak into the product UI.
+   ========================================================================== */
+
+/* Reveal-on-scroll. The hidden state is applied *only* under [data-reveal="on"],
+   which the boot script sets after confirming IntersectionObserver exists — so
+   a no-JS load, a crawler, or a hydration failure ships the page fully visible
+   rather than blank. The script also clears the attribute on a timer if React
+   never signals readiness. See src/components/landing/reveal.tsx. */
+.reveal {
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal="on"] .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+[data-reveal="on"] .reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero choreography: the copy rises line by line, then the product surface
+   materialises — blur and scale together, so it reads as a pane of glass
+   arriving rather than a rectangle fading up. */
+@keyframes landing-line {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-materialize {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.985);
+    filter: blur(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+/* pathLength="1" on the path normalises the dash units, so one keyframe draws
+   any curve regardless of its real length. */
+@keyframes landing-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes landing-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.landing-line {
+  animation: landing-line 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--line-delay, 0ms);
+}
+
+.landing-surface {
+  animation: landing-materialize 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--line-delay, 0ms);
+}
+
+.landing-draw {
+  stroke-dasharray: 1;
+  animation: landing-draw 1.6s cubic-bezier(0.33, 1, 0.68, 1) both;
+  animation-delay: var(--line-delay, 0ms);
+}
+
+.landing-grow {
+  transform-origin: bottom;
+  animation: landing-grow 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--line-delay, 0ms);
+}
+
+/* An achromatic lift behind the hero. Zero chroma on purpose: the palette
+   reserves color for P&L, and that rule doesn't get suspended for atmosphere. */
+.landing-glow {
+  background:
+    radial-gradient(
+      62rem 34rem at 50% -6rem,
+      oklch(1 0 0 / 0.07),
+      transparent 70%
+    ),
+    radial-gradient(
+      40rem 26rem at 82% 8rem,
+      oklch(1 0 0 / 0.035),
+      transparent 68%
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal="on"] .reveal {
+    transform: none;
+  }
+  .landing-line,
+  .landing-surface {
+    animation: fade 0.3s ease-out both;
+  }
+  .landing-draw {
+    stroke-dasharray: none;
+    animation: none;
+  }
+  .landing-grow {
+    animation: none;
   }
 }
