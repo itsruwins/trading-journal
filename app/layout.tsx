@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/src/lib/auth";
 import { ThemeProvider } from "@/src/lib/theme";
+import { REVEAL_BOOT_SCRIPT } from "@/src/components/landing/reveal-boot";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +46,11 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        {/* Arms the landing page's scroll reveals. Inert on every other route
+            — nothing outside the landing page carries a .reveal — but it has
+            to be here rather than in the page: React never executes a <script>
+            rendered inside a component on a client render. */}
+        <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOT_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>

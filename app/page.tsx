@@ -8,7 +8,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { CtaLink } from "@/src/components/landing/cta";
 import { LandingNav } from "@/src/components/landing/landing-nav";
 import { ProductMock } from "@/src/components/landing/product-mock";
-import { Reveal, REVEAL_BOOT_SCRIPT } from "@/src/components/landing/reveal";
+import { Reveal } from "@/src/components/landing/reveal";
 import { SignedInRedirect } from "@/src/components/landing/signed-in-redirect";
 import { LandingCalendar } from "@/src/components/landing/landing-calendar";
 import {
@@ -572,10 +572,6 @@ export default function LandingPage() {
        <html> that the app and the auth pages do, so signing in never flips
        the palette out from under the visitor. */
     <div className="min-h-dvh bg-canvas text-ink">
-      {/* Runs at parse time, before anything below it paints — so the reveal
-          transitions never leave content hidden on a load without JS. */}
-      <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOT_SCRIPT }} />
-
       <SignedInRedirect />
       <LandingNav />
 

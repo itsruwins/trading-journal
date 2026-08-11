@@ -14,28 +14,23 @@ import { cn } from "@/src/lib/cn";
 
    The rule from the design system: a reveal enhances an already-visible
    default, it never gates content on JS. So the hidden state lives behind
-   `[data-reveal="on"]` on <html>, which only BOOT_SCRIPT sets — and only after
-   confirming IntersectionObserver exists. Three independent ways out:
+   `[data-reveal="on"]` on <html>, which only the boot script sets — and only
+   after confirming IntersectionObserver exists. Three independent ways out:
 
      1. No JS / no IntersectionObserver  →  attribute never set, page visible.
      2. React never hydrates             →  the script's own timer clears it.
      3. Observer attaches but misfires   →  each element's local fallback timer.
 
    The window flag is how the script tells (2) from a slow-but-fine hydration:
-   the first Reveal to mount sets it, and the script stands down. */
+   the first Reveal to mount sets it, and the script stands down. The script
+   itself is rendered by the root layout's <head>; see reveal-boot.ts for why
+   it can't live in the page component. */
 
 declare global {
   interface Window {
     __landingRevealReady?: boolean;
   }
 }
-
-export const REVEAL_BOOT_SCRIPT = `(function(){try{
-if(!('IntersectionObserver' in window))return;
-var d=document.documentElement;
-d.setAttribute('data-reveal','on');
-setTimeout(function(){if(!window.__landingRevealReady)d.removeAttribute('data-reveal')},4000);
-}catch(e){}})()`;
 
 /** Local safety net: reveal regardless if the observer hasn't fired by now. */
 const FALLBACK_MS = 2500;
