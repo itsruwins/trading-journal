@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/src/lib/cn";
 import { Logo } from "@/src/components/logo";
+import { ThemeToggle } from "@/src/components/ui/theme-toggle";
 import { CtaLink } from "./cta";
 
 /* Translucent chrome, the way the app's topbar does it: content scrolls under
@@ -61,6 +62,10 @@ export function LandingNav() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* Same control the auth pages and the app topbar carry, writing to
+              the same stored preference — so the theme a visitor picks here is
+              the theme they land in after signing up. */}
+          <ThemeToggle />
           <CtaLink href="/login" variant="ghost" size="sm">
             Log in
           </CtaLink>

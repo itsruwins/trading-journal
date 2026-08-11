@@ -1,12 +1,15 @@
 @import "tailwindcss";
 
-/* The third selector scopes the dark palette to a subtree. The landing page
-   uses it to stay dark whatever theme the app has saved, without fighting
-   ThemeProvider over the attribute on <html>. */
 :root,
-:root[data-theme="dark"],
-[data-theme-scope="dark"] {
+:root[data-theme="dark"] {
   color-scheme: dark;
+
+  /* Depth used by the landing page. Defined per theme rather than hardcoded,
+     so the hero's product render doesn't carry a near-black drop shadow into
+     light mode. */
+  --mock-shadow: oklch(0 0 0 / 0.85);
+  --landing-lift: oklch(1 0 0 / 0.07);
+  --landing-lift-soft: oklch(1 0 0 / 0.035);
 
   /* Surfaces — pure neutral, zero chroma */
   --shell: oklch(0.075 0 0);
@@ -65,6 +68,12 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
+
+  /* Light mode gets a far shallower shadow and a grey lift instead of a white
+     one — a white glow on a white page is invisible. */
+  --mock-shadow: oklch(0 0 0 / 0.18);
+  --landing-lift: oklch(0 0 0 / 0.05);
+  --landing-lift-soft: oklch(0 0 0 / 0.025);
 
   --shell: oklch(0.975 0 0);
   --canvas: oklch(1 0 0);
@@ -623,17 +632,19 @@ dialog[data-closing]::backdrop {
 }
 
 /* An achromatic lift behind the hero. Zero chroma on purpose: the palette
-   reserves color for P&L, and that rule doesn't get suspended for atmosphere. */
+   reserves color for P&L, and that rule doesn't get suspended for atmosphere.
+   The two stops are theme tokens, so the same gradient reads as a glow on
+   dark and as a soft vignette on light. */
 .landing-glow {
   background:
     radial-gradient(
       62rem 34rem at 50% -6rem,
-      oklch(1 0 0 / 0.07),
+      var(--landing-lift),
       transparent 70%
     ),
     radial-gradient(
       40rem 26rem at 82% 8rem,
-      oklch(1 0 0 / 0.035),
+      var(--landing-lift-soft),
       transparent 68%
     );
 }

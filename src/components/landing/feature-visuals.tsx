@@ -1,93 +1,11 @@
-import { Fragment } from "react";
 import { Camera } from "lucide-react";
 import { cn } from "@/src/lib/cn";
 import { TagChip } from "@/src/components/ui/tag-chip";
-import { CALENDAR, SETUPS, signedMoney } from "./sample-data";
+import { SESSIONS, SETUPS, signedMoney } from "./sample-data";
 
 /* Each feature gets its own visual rather than an icon in a rounded square.
    The rule the whole page runs on holds here too: green and red appear only on
    figures that represent money. Everything structural stays at zero chroma. */
-
-export function CalendarVisual() {
-  /* Mon–Fri plus a weekly total, the same six-column shape the real calendar
-     uses. The summary column drops below sm, where six columns of currency
-     would be illegible — again matching the app. */
-  const weeks = [0, 1, 2, 3].map((w) => CALENDAR.slice(w * 5, w * 5 + 5));
-
-  return (
-    <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6" aria-hidden="true">
-      {["M", "T", "W", "T", "F"].map((day, i) => (
-        <div
-          key={`${day}-${i}`}
-          className="pb-0.5 text-center text-[10px] font-medium text-faint"
-        >
-          {day}
-        </div>
-      ))}
-      <div className="hidden pb-0.5 text-center text-[10px] font-medium text-faint sm:block">
-        Week
-      </div>
-
-      {weeks.map((week, w) => {
-        const total = week.reduce<number>((sum, value) => sum + (value ?? 0), 0);
-        return (
-          <Fragment key={w}>
-            {week.map((value, d) => {
-              const positive = value != null && value > 0;
-              const negative = value != null && value < 0;
-              return (
-                <div
-                  key={d}
-                  className={cn(
-                    "flex aspect-square flex-col justify-between rounded-md p-1.5 sm:aspect-[3/2] sm:p-2",
-                    positive
-                      ? "bg-positive/12"
-                      : negative
-                        ? "bg-negative/12"
-                        : "bg-wash",
-                  )}
-                >
-                  {/* --muted, not --faint: over the tinted P&L wells these
-                      10px numerals measure 4.3:1 on --faint, just under the
-                      4.5:1 floor. --muted clears it at ~6:1. */}
-                  <span className="text-[10px] leading-none text-muted">
-                    {w * 7 + d + 3}
-                  </span>
-                  {value != null && (
-                    <span
-                      className={cn(
-                        "tabular truncate text-[10px] font-semibold leading-none sm:text-[11px]",
-                        positive ? "text-positive" : "text-negative",
-                      )}
-                    >
-                      {signedMoney(value)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-            <div className="hidden aspect-[3/2] flex-col items-center justify-center rounded-md bg-wash p-1 sm:flex">
-              <span
-                className={cn(
-                  "tabular truncate text-[11px] font-semibold",
-                  total >= 0 ? "text-positive" : "text-negative",
-                )}
-              >
-                {signedMoney(total)}
-              </span>
-            </div>
-          </Fragment>
-        );
-      })}
-    </div>
-  );
-}
-
-const SESSIONS = [
-  { name: "London", value: 2240, count: 18 },
-  { name: "New York", value: 1420, count: 12 },
-  { name: "Asia", value: -210, count: 5 },
-];
 
 /* Diverging bars around a zero line placed in proportion to the data, rather
    than pinned to the middle of the track. A centred baseline would spend half
@@ -266,7 +184,7 @@ export function ScreenshotsVisual() {
   return (
     <div className="relative h-32 sm:h-36" aria-hidden="true">
       <CandleThumb className="absolute left-6 top-0 h-24 w-[62%] rotate-[-3deg] opacity-60 sm:h-28" />
-      <CandleThumb className="absolute right-0 top-4 h-24 w-[62%] rotate-[2.5deg] shadow-[0_16px_36px_-12px_oklch(0_0_0/0.7)] sm:h-28" />
+      <CandleThumb className="absolute right-0 top-4 h-24 w-[62%] rotate-[2.5deg] shadow-[0_16px_36px_-12px_var(--mock-shadow)] sm:h-28" />
       <span className="absolute bottom-0 left-0 inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-2.5 py-1 text-[11px] text-muted">
         <Camera className="size-3.5" />2 attached
       </span>

@@ -41,7 +41,9 @@ Not the neon-on-navy trading-signals aesthetic: no glowing candlesticks, no gree
 
 **Chroma is earned.** The entire interface is zero-chroma neutral. Green and red appear only where real money is at stake — on a P&L figure, a calendar day, a monthly bar. Color is data, never decoration, and this rule holds on the marketing page exactly as it does in the app.
 
-**Show the instrument.** Product claims are made by rendering the product. The landing hero is the real dashboard built in-page from the same tokens and chart language, not a screenshot and not an abstraction — and sample figures are labelled as sample figures.
+**Show the instrument.** Product claims are made by rendering the product — literally. The landing hero mounts the same `AccountSnapshot`, `Card`, `EquityCurve` and `MonthlyBars` the dashboard mounts, fed sample data in the app's own types, so the marketing page cannot drift away from the thing it is selling. Where a real component can't be reused (the P&L calendar reads `new Date()`, which a prerendered page can't do, and links to trades a visitor doesn't have), the landing copy stays deliberately close to the original so the diff is obvious. Sample figures are always labelled as sample figures.
+
+**One theme, everywhere.** The landing page, the auth pages and the app all read the same `data-theme` on `<html>`. No surface locks itself to a palette, because the moment one does, signing in becomes a jarring flash from one world into another.
 
 **Figures are typography.** Numbers get tabular lining figures, mono where they align in columns, and are never centred in a way that breaks the decimal. A misaligned column is a bug.
 

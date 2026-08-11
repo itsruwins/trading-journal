@@ -9,9 +9,9 @@ import { LandingNav } from "@/src/components/landing/landing-nav";
 import { ProductMock } from "@/src/components/landing/product-mock";
 import { Reveal, REVEAL_BOOT_SCRIPT } from "@/src/components/landing/reveal";
 import { SignedInRedirect } from "@/src/components/landing/signed-in-redirect";
+import { LandingCalendar } from "@/src/components/landing/landing-calendar";
 import {
   AccountsVisual,
-  CalendarVisual,
   ScreenshotsVisual,
   SetupsVisual,
   TagsVisual,
@@ -192,18 +192,24 @@ function Feature({
   visual,
   className,
   delay,
+  /* Off when the visual already carries its own card — the P&L calendar is a
+     bordered surface in its own right, and a card inside a card is always
+     wrong. */
+  framed = true,
 }: {
   title: string;
   body: string;
   visual: ReactNode;
   className?: string;
   delay?: number;
+  framed?: boolean;
 }) {
   return (
     <Reveal
       delay={delay}
       className={cn(
-        "flex flex-col gap-6 rounded-xl border border-edge bg-surface p-5 sm:p-6",
+        "flex flex-col gap-6",
+        framed && "rounded-xl border border-edge bg-surface p-5 sm:p-6",
         className,
       )}
     >
@@ -237,9 +243,10 @@ function Features() {
       <div className="mt-12 grid gap-3 sm:gap-4 lg:grid-cols-12">
         <Feature
           className="lg:col-span-7"
+          framed={false}
           title="The month, at a glance"
           body="Every trading day tinted by its result, with weekly totals down the side. Click a day and the trades behind the number open up."
-          visual={<CalendarVisual />}
+          visual={<LandingCalendar />}
         />
         <Feature
           className="lg:col-span-5"
@@ -553,7 +560,10 @@ function Footer() {
 
 export default function LandingPage() {
   return (
-    <div data-theme-scope="dark" className="min-h-dvh bg-canvas text-ink">
+    /* No theme lock here. The landing page follows the same data-theme on
+       <html> that the app and the auth pages do, so signing in never flips
+       the palette out from under the visitor. */
+    <div className="min-h-dvh bg-canvas text-ink">
       {/* Runs at parse time, before anything below it paints — so the reveal
           transitions never leave content hidden on a load without JS. */}
       <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOT_SCRIPT }} />
