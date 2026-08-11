@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { cn } from "@/src/lib/cn";
 import { Logo } from "@/src/components/logo";
+import { Badge } from "@/src/components/ui/badge";
 import { CtaLink } from "@/src/components/landing/cta";
 import { LandingNav } from "@/src/components/landing/landing-nav";
 import { ProductMock } from "@/src/components/landing/product-mock";
@@ -350,6 +351,7 @@ const PLANS = [
     cta: "Create free account",
     href: "/signup",
     featured: false,
+    badge: null,
   },
   {
     name: "Pro",
@@ -363,9 +365,12 @@ const PLANS = [
       "Per-setup and per-session breakdowns",
       "Full history, exportable",
     ],
-    cta: "Start free, upgrade anytime",
+    cta: "Start free, upgrade when it lands",
     href: "/signup",
     featured: true,
+    /* Pro isn't live yet. Delete this and restore the CTA to "Start free,
+       upgrade anytime" the day it ships. */
+    badge: "Coming soon",
   },
 ];
 
@@ -375,8 +380,8 @@ function Pricing() {
       <Reveal className="max-w-2xl">
         <h2 className={H2}>Free until the journal is worth paying for.</h2>
         <p className={cn(LEAD, "mt-5")}>
-          Start on the free plan. Upgrade when you&apos;re running more than one
-          account, or when you want the screenshots.
+          Start on the free plan today. Pro is still being built — what&apos;s
+          listed under it is what it will add the day it lands.
         </p>
       </Reveal>
 
@@ -392,9 +397,12 @@ function Pricing() {
                 : "border-edge bg-surface",
             )}
           >
-            <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">
-              {plan.name}
-            </h3>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">
+                {plan.name}
+              </h3>
+              {plan.badge && <Badge>{plan.badge}</Badge>}
+            </div>
 
             <p className="mt-4 flex items-baseline gap-2">
               <span className="tabular text-[2.75rem] font-semibold leading-none tracking-[-0.035em] text-ink">
